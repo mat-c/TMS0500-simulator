@@ -29,17 +29,14 @@
 // ====================================
 // Log control
 // ====================================
-#define	LOG_SHORT	0x0001
-#define	LOG_HRAST	0x0002
-#define	LOG_DEBUG	0x0004
-static unsigned log_flags = 0;
+unsigned log_flags = 0;
 
 FILE *log_file;
 #define	LOG_FILE	log_file
 // disassembly output macro
 //#define	DIS(...)	fprintf (LOG_FILE, __VA_ARGS__)
 // short log output macro
-#define	LOG(...)	fprintf (LOG_FILE, __VA_ARGS__)
+//#define	LOG(...)	fprintf (LOG_FILE, __VA_ARGS__)
 // Hrast-like log output macro
 #define	LOG_H(...)	fprintf (LOG_FILE, __VA_ARGS__)
 
@@ -75,6 +72,9 @@ static struct {
   unsigned char digit;
   // CPU cycle counter (used to simulate real CPU frequency)
   unsigned cycle;
+
+  int reset;
+  int zero_suppr;
 } cpu;
 
 // mask definitions
@@ -199,6 +199,7 @@ int execute (unsigned short opcode) {
         // jump
         // ================================
         cpu.flags |= FLG_JUMP;
+        return 0;
     }
     if (cpu.flags & FLG_JUMP) {
         // COND is set again after last jump in series
@@ -482,7 +483,9 @@ int execute (unsigned short opcode) {
                     break;
                 case 0x000C:
                     // EXTKR
-                    cpu.KR = (cpu.KR & 0x000F) | cpu.EXT;
+                    // XXX KR[0] set ????
+                    //cpu.KR = (cpu.KR & 0x000F) | ((cpu.EXT << 1) & 0xFFF0);
+                    cpu.KR = ((cpu.EXT << 1) & 0xFFF0) | (cpu.EXT >> 15);
                     if (log_flags & LOG_SHORT)
                         LOG ("KR=%04X", cpu.KR);
                     break;
@@ -641,7 +644,7 @@ static void debug(int addr, int opcode)
     if (log_flags) {
         DIS("\n");
         if (log_flags & LOG_SHORT)
-#if 0
+#if 1
             DIS ("%04X:%c%c%c\t%04X\t", addr, (cpu.flags & FLG_COND) ? 'C' : '-',
                     (cpu.flags & FLG_IDLE) ? 'I' : '-',
                     (cpu.flags & FLG_HOLD) ? 'H' : '-',
@@ -666,6 +669,7 @@ static void debug(int addr, int opcode)
             LOG_H ("\nFA=%04X [", cpu.fA); for (i = 15; i >= 0; i--) LOG_H ("%d", (cpu.fA >> i) & 1);
             LOG_H ("] KR=%04X [", cpu.KR); for (i = 15; i >= 0; i--) LOG_H ("%d", (cpu.KR >> i) & 1);
             LOG_H ("] EXT=%02X COND=%d IDLE=%d", (cpu.EXT >> 4) & 0xFF, (cpu.flags & FLG_COND) != 0, (cpu.flags & FLG_IDLE) != 0);
+            LOG_H (" IOi="); for (i = 15; i >= 0; i--) LOG_H ("%X", cpu.Sin[i]);
             LOG_H (" IO="); for (i = 15; i >= 0; i--) LOG_H ("%X", cpu.Sout[i]);
             LOG_H ("\nFB=%04X [", cpu.fB); for (i = 15; i >= 0; i--) LOG_H ("%d", (cpu.fB >> i) & 1);
             LOG_H ("] SR=%04X R5=%X", cpu.SR, cpu.R5);
@@ -684,19 +688,59 @@ static inline int run_early(int opcode)
         case 0x0000: /* flags */
             return 0;
         case 0x0800: /* keyboard */
-            return 1;
+            return 1; /* HOLD/COND */
         case 0x0A00: /* wait */
             switch (opcode & 0xF) {
                 case 0x0: /* wait digit */
-                    return 1;
+                    return 1; /* HOLD */
+                case 0x3: /* wait busy */
+                case 0xB: /* test busy. log cpu.digit */
+                    return 1; /* COND */
                 default:
                     return 0;
             }
         default: /* alu */
-            if ((opcode & 7) == 1)
+            if ((opcode & 7) == 1) /* IO write. Can set R5/COND */
                 return 1;
     }
     return 0;
+}
+
+static void alu_gen_digit(struct bus *bus)
+{
+    if (cpu.flags & FLG_IDLE) {
+        int i = cpu.digit;
+#ifndef DISP_DBG
+        if (i == 15)
+            cpu.zero_suppr = 1;
+        if (i == 3 || cpu.R5 == i || cpu.B[i] >= 8)
+            cpu.zero_suppr = 0;
+        if (i == 2)
+            cpu.zero_suppr = 1;
+        if (cpu.B[i] == 7 || cpu.B[i] == 3 || (cpu.B[i] <= 4 && cpu.zero_suppr && !cpu.A[i]))
+            bus->display_digit = ' ';
+        else if (cpu.B[i] == 6 || (cpu.B[i] == 5 && !cpu.A[i]))
+            bus->display_digit = '-';
+        else if (cpu.B[i] == 5)
+            bus->display_digit = 'o';
+        else if (cpu.B[i] == 4)
+            bus->display_digit = '\'';
+        else if (cpu.B[3] == 2)
+            bus->display_digit = '"';
+        else {
+            bus->display_digit = '0' + cpu.A[i];
+            if (cpu.A[i])
+                cpu.zero_suppr = 0;
+        }
+        bus->display_dpt = 0;
+        bus->display_segH = 0;
+        if (cpu.R5 == i)
+            bus->display_dpt = 1;
+        //XXX
+        if (cpu.fA & (1<<(i+1)))
+            bus->display_segH = 1;
+#endif
+    }
 }
 
 int alu_process(void *priv, struct bus *bus)
@@ -705,9 +749,21 @@ int alu_process(void *priv, struct bus *bus)
     cpu.EXT = bus->ext;
     cpu.key = bus->key_line;
 
+    if (cpu.reset) {
+        if (bus->sstate == 0 && bus->write)
+            bus->ext = 1;
+        if (bus->sstate == 15 && !bus->write) {
+            cpu.reset--;
+            cpu.opcode = bus->irg;
+        }
+        return 0;
+    }
+
     if (bus->sstate == 0 && bus->write) {
         debug(bus->addr, cpu.opcode);
+        cpu.flags &= ~FLG_HOLD;
         memset(cpu.Sin, 0, sizeof(cpu.Sin));
+        memset(cpu.Sout, 0, sizeof(cpu.Sin));
         if (cpu.flags & FLG_COND)
             cpu.flags |= FLG_COND_LAST;
 
@@ -718,11 +774,18 @@ int alu_process(void *priv, struct bus *bus)
         if (cpu.opcode != 0x0A0C)
             bus->ext = ((cpu.KR >> 1) | (cpu.KR << 15)) & 0xFFF9;
 
+        /* are KR[1..3] really exist ???. Never used */
+        if (cpu.opcode == 0x0015)
+            bus->ext |= 1; /* PREG */
+
+        //XXX D change at S15W. But last alu input S15R
         //TODO update digit, dpt, segH here...
+        alu_gen_digit(bus);
 
         /* we need to run here :
          * instruction that set HOLD
          * alu operation that write io
+         * PREG ???
          *
          * we don't want to run here :
          * instruction that read io
@@ -748,7 +811,6 @@ int alu_process(void *priv, struct bus *bus)
     else if (bus->sstate == 2 && bus->write) {
         if (cpu.flags & FLG_HOLD) {
             bus->ext |= EXT_HOLD;
-            cpu.flags &= ~FLG_HOLD;
         }
     }
     else if (bus->sstate == 2 && !bus->write) {
@@ -756,6 +818,12 @@ int alu_process(void *priv, struct bus *bus)
             // clear PREG bit if bus is not hold
             cpu.KR &= ~0x2;
         }
+    }
+    else if (bus->sstate == 14 && bus->write) {
+        /* clear segment before D line switch */
+        bus->display_dpt = 0;
+        bus->display_segH = 0;
+        bus->display_digit = ' ';
     }
     /* some alu operation depends on IO and other write to IO
      * dst IO : xxx001
@@ -781,15 +849,26 @@ int alu_process(void *priv, struct bus *bus)
 void alu_init(void)
 {
     log_file = stdout;
-    log_flags = 5;
+    log_flags = 7;
     if (log_flags) {
         FILE *f = fopen("log.txt", "a");
         if (f)
             log_file = f;
     }
     /* force preg 0 */
-    cpu.KR = 2;
+    //cpu.KR = 2;
     /* set cond for easy compare with other logs */
     cpu.flags |= FLG_COND;
+    memset(cpu.A, 0xE, sizeof(cpu.A));
+    memset(cpu.B, 0xE, sizeof(cpu.B));
+    memset(cpu.C, 0xE, sizeof(cpu.B));
+    memset(cpu.D, 0xE, sizeof(cpu.B));
+    memset(cpu.E, 0xE, sizeof(cpu.B));
+    cpu.SR = 0XDEAD;
+    cpu.fA = 0XDEAD;
+    cpu.fB = 0XDEAD;
+    //cpu.KR |= 0xDE00;
+    cpu.R5 = 0xE;
+    cpu.reset = 5;
 
 }
