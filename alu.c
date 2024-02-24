@@ -63,6 +63,7 @@ static struct {
 #define	FLG_IDLE	0x0001
 #define	FLG_HOLD	0x0002
 #define FLG_JUMP    0x0004
+#define FLG_PREG    0x0008
 #define FLG_IO_VALID    0x0400
 #define	FLG_COND	0x0800
 #define	FLG_COND_LAST	0x1000
@@ -775,15 +776,24 @@ int alu_process(void *priv, struct bus *bus)
             cpu.flags |= FLG_COND_LAST;
 
         /* Output KR, unless MOV     KR,EXT[4..15]
-         * XXX what happen if PREG is set and MOV KR,EXT : Sw code error ???
-           XXX what happen if opcode touch KR. What should be send to the bus ???
+         * XXX what happen if opcode touch KR. What should be send to the bus ???
+         * today KR from previous bus is send. And exception is done for KR[1]/PREG see below
          */
         if (cpu.opcode != 0x0A0C)
-            bus->ext = ((cpu.KR >> 1) | (cpu.KR << 15)) & 0xFFF9;
+            bus->ext = ((cpu.KR >> 1) | (cpu.KR << 15)) & 0xFFF8;
 
+
+        /*
+         * Special case set KR[1]/PREG. Need imediate output on bus.
+         * To not modifiy too much execute, decode instruction here,
+         * set FLG_PREG and ignore KR[1].
+         * XXX all flags operation are imediate ?
+         */
         /* are KR[1..3] really exist ???. Never used */
-        if (cpu.opcode == 0x0015)
+        if (cpu.opcode == 0x0015) { /* set KR[1] */
             bus->ext |= 1; /* PREG */
+            cpu.flags |= FLG_PREG;
+        }
 
         //XXX D change at S15W. But last alu input S15R
         //TODO update digit, dpt, segH here...
@@ -823,7 +833,7 @@ int alu_process(void *priv, struct bus *bus)
     else if (bus->sstate == 2 && !bus->write) {
         if ((bus->ext & EXT_HOLD) == 0) {
             // clear PREG bit if bus is not hold
-            cpu.KR &= ~0x2;
+            cpu.flags &= ~FLG_PREG;
         }
     }
     else if (bus->sstate == 14 && bus->write) {
@@ -839,6 +849,7 @@ int alu_process(void *priv, struct bus *bus)
         if (!run_early(cpu.opcode)) {
             memcpy(cpu.Sin,  bus->io, sizeof(bus->io));
             execute(cpu.opcode);
+            cpu.KR &= ~0x2;
         }
         /* save next opcode */
         cpu.opcode = bus->irg;
