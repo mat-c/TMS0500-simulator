@@ -41,7 +41,8 @@ struct brom_state {
 	uint16_t last_irg;
 
 	uint16_t data[1024];
-	int size;
+	int end;
+    int start;
 };
 
 #define BROM_CS 0
@@ -70,12 +71,12 @@ static void brom_process_out(struct brom_state *bstate, struct bus *bus_state)
         return;
 
     /* with is implementation, the cpu
-     * should ignore irg instruction while hold is held
      * nHOLD(ext) WAIT(irg) XXXX (exec)
+     * HOLD(ext) WAIT(irg)  WAIT (exec)
+     * HOLD(ext) WAIT(irg)  WAIT (exec)
+     * HOLD(ext) WAIT(irg)  WAIT (exec)
+     * HOLD(ext) WAIT(irg)  WAIT (exec)
      * nHOLD(ext) KEY(irg)  WAIT (exec)
-     *  HOLD(ext) KEY(irg)  WAIT (exec)
-     *  HOLD(ext) KEY(irg)  WAIT (exec)
-     *  HOLD(ext) KEY(irg)  WAIT (exec)
      * nHOLD(ext) XXXX(irg) KEY (exec)
      */
     if (bus_state->ext & EXT_HOLD) {
@@ -106,9 +107,13 @@ static void brom_process_out(struct brom_state *bstate, struct bus *bus_state)
 
 
     //DIS("addr %d last_irg 0x%04x\n", bstate->pc, bstate->last_irg);
-    unsigned int addr = PC_ADDR(bstate->pc);
-    /* output instruction if selected */
-    if ((bstate->pc >> 10) == BROM_CS && addr < bstate->size) {
+
+    /* output instruction if selected. First rom used 1K mask
+     * but latter can be up to 2.5K.
+     * Don't use mask for simplicity
+     */
+    if (bstate->pc >= bstate->start && bstate->pc < bstate->end) {
+        unsigned int addr = bstate->pc - bstate->start;
         /* dbg check nobody already write irg 
          * XXX 0 instruction is valid
          */
@@ -140,18 +145,23 @@ int brom_process(void *priv, struct bus *bus_state)
     return 0;
 }
 
-void *brom_init(void)
+void *brom_init(const char *name)
 {
     struct brom_state *bstate = malloc(sizeof(struct brom_state));
-    int ret;
+    int size;
+    int base;
     if (!bstate)
         return NULL;
     bstate->last_ext = 0;
     bstate->last_irg = 0;
-    ret = load_dump(bstate->data, sizeof(bstate->data), "rom-SR50/TMC0521B.txt");
+    bstate->pc = 1<<16;
+
+    size = load_dump(bstate->data, sizeof(bstate->data), name, &base);
     //ret = load_dump(bstate->data, sizeof(bstate->data), "rom-SR50r1/TMC0521E.txt");
     //ret = load_dump(bstate->data, sizeof(bstate->data), "rom-SR50A/TMC0531A.txt");
-	bstate->size = ret;
-    printf("rom size %d\n", ret);
+	bstate->end = base + size;
+    bstate->start = base;
+    printf("rom '%s'  base %d size %d\n",
+            name, base, size);
     return bstate;
 }

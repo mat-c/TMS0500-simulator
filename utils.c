@@ -23,21 +23,38 @@
 
 #include "emu.h"
 #include <stdio.h>
+#include <ctype.h>
 
 // ------------------------------------
-int load_dump (unsigned short *buf, int buf_len, const char *name) {
+int load_dump (unsigned short *buf, int buf_len, const char *name, int *base) {
     int rom_size = 0;
+    int base_addr = -1;
     FILE *f;
 #define	LINELEN	1024
     char line[LINELEN];
+    if (!base)
+        return 0;
     if ((f = fopen (name, "rt")) == NULL)
         return 0;
     while (!feof (f)) {
-        unsigned addr, data, idx = 0;
+        unsigned data, idx = 0;
+        int addr;
         if (!fgets (line, LINELEN, f))
             break;
+        if (!isxdigit(line[0]) || !isxdigit(line[1]) ||
+            !isxdigit(line[2]) || !isxdigit(line[3]) ||
+            line[4] != ':')
+            continue;
         if (!sscanf (line, "%X: ", &addr))
             continue;
+        if (base_addr == -1)
+            base_addr = addr;
+        if (addr >= base_addr)
+            addr -= base_addr;
+        else {
+            fprintf (stderr, "load %s: address 0x%X out of range\n", name, addr);
+            continue;
+        }
         while (line[idx] > ' ') idx++;
         while (line[idx] && line[idx] <= ' ') idx++;
         while (sscanf (line+idx, "%X", &data) > 0) {
@@ -47,12 +64,13 @@ int load_dump (unsigned short *buf, int buf_len, const char *name) {
                     rom_size = addr;
             }
             else
-                fprintf (stderr, "load %s: address 0x%X too big\n", name, addr);
+                fprintf (stderr, "load %s: address 0x%X out of range\n", name, addr + base_addr);
             while (line[idx] > ' ') idx++;
             while (line[idx] && line[idx] <= ' ') idx++;
         }
     }
     fclose (f);
+    *base = base_addr;
     return rom_size;
 }
 

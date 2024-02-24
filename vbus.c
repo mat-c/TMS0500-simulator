@@ -85,7 +85,7 @@ int run(struct chip chips[], struct bus *bus)
 int main()
 {
     alu_init();
-    chipss[1].priv = brom_init();
+    chipss[1].priv = brom_init("rom-SR50/TMC0521B.txt");
     key_init();
     scom_const_init();
     run(chipss, &bus_state);

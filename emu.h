@@ -47,9 +47,9 @@ void alu_init(void);
 
 
 int brom_process(void *priv, struct bus *bus);
-void *brom_init(void);
+void *brom_init(const char *name);
 
-int load_dump (unsigned short *buf, int buf_len, const char *name);
+int load_dump (unsigned short *buf, int buf_len, const char *name, int *base);
 int load_dump8 (unsigned char buf[][16], int buf_len, const char *name);
 
 
