@@ -149,6 +149,8 @@ void *brom_init(void)
     bstate->last_ext = 0;
     bstate->last_irg = 0;
     ret = load_dump(bstate->data, sizeof(bstate->data), "rom-SR50/TMC0521B.txt");
+    //ret = load_dump(bstate->data, sizeof(bstate->data), "rom-SR50r1/TMC0521E.txt");
+    //ret = load_dump(bstate->data, sizeof(bstate->data), "rom-SR50A/TMC0531A.txt");
 	bstate->size = ret;
     printf("rom size %d\n", ret);
     return bstate;

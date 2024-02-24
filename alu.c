@@ -333,6 +333,10 @@ int execute (unsigned short opcode) {
             // ================================
         case 0x0800:
             {
+                //XXX the rom sometimes doesn't reset COND
+                //before key operations...
+                //it cause false detection, but there are removed
+                //by debouncing. Bug or way to save one instruction
                 unsigned char mask;
                 // get pressed key(s) mask
                 mask = (((opcode & 0x07) | ((opcode >> 1) & 0x78)) ^ 0x7F) & cpu.key;
@@ -645,9 +649,10 @@ static void debug(int addr, int opcode)
         DIS("\n");
         if (log_flags & LOG_SHORT)
 #if 1
-            DIS ("%04X:%c%c%c\t%04X\t", addr, (cpu.flags & FLG_COND) ? 'C' : '-',
+            DIS ("%04X:%c%c%c.D%02d\t%04X\t", addr, (cpu.flags & FLG_COND) ? 'C' : '-',
                     (cpu.flags & FLG_IDLE) ? 'I' : '-',
                     (cpu.flags & FLG_HOLD) ? 'H' : '-',
+                    cpu.digit,
                     opcode);
 #else
             DIS ("%04X:%c%c\t%04X\t", addr, (cpu.flags & FLG_COND) ? 'C' : '-',
@@ -674,7 +679,6 @@ static void debug(int addr, int opcode)
             LOG_H ("\nFB=%04X [", cpu.fB); for (i = 15; i >= 0; i--) LOG_H ("%d", (cpu.fB >> i) & 1);
             LOG_H ("] SR=%04X R5=%X", cpu.SR, cpu.R5);
             LOG_H ("\n");
-            LOG_H ("D%d\n", cpu.digit);
         } else {
             LOG ("\t");
         }
@@ -725,6 +729,7 @@ static void alu_gen_digit(struct bus *bus)
             bus->display_digit = 'o';
         else if (cpu.B[i] == 4)
             bus->display_digit = '\'';
+        //XXX B[3] or B[i] ?
         else if (cpu.B[3] == 2)
             bus->display_digit = '"';
         else {
@@ -737,6 +742,8 @@ static void alu_gen_digit(struct bus *bus)
         if (cpu.R5 == i)
             bus->display_dpt = 1;
         //XXX
+        //It is also output when !idle at Srate
+        //D15 is wrong, but not really used
         if (cpu.fA & (1<<(i+1)))
             bus->display_segH = 1;
 #endif

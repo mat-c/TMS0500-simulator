@@ -23,8 +23,21 @@
 #include <stddef.h>
 #include "bus.h"
 
+#define SR50
+#define TEST_MODE
+
+
+// ====================================
+// Log control
+// ====================================
+#define	LOG_SHORT	0x0001
+#define	LOG_HRAST	0x0002
+#define	LOG_DEBUG	0x0004
+
 extern FILE *log_file;
+extern unsigned log_flags;
 #define	DIS(...)	fprintf (log_file, __VA_ARGS__)
+#define	LOG(...)	do { if (log_flags & LOG_SHORT) fprintf (log_file, __VA_ARGS__); } while (0)
 
 void disasm (unsigned addr, unsigned opcode);
 
@@ -37,3 +50,15 @@ int brom_process(void *priv, struct bus *bus);
 void *brom_init(void);
 
 int load_dump (unsigned short *buf, int buf_len, const char *name);
+int load_dump8 (unsigned char buf[][16], int buf_len, const char *name);
+
+
+char *display_debug(void);
+int display_process(void *priv, struct bus *bus);
+int key_process(void *priv, struct bus *bus);
+
+int scom_reg_process(void *priv, struct bus *bus);
+
+
+int scom_const_process(void *priv, struct bus *bus);
+void *scom_const_init(void);

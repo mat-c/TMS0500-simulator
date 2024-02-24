@@ -43,6 +43,75 @@ int load_dump (unsigned short *buf, int buf_len, const char *name) {
         while (sscanf (line+idx, "%X", &data) > 0) {
             if (addr < buf_len) {
                 buf[addr++] = data;
+                if (rom_size < addr)
+                    rom_size = addr;
+            }
+            else
+                fprintf (stderr, "load %s: address 0x%X too big\n", name, addr);
+            while (line[idx] > ' ') idx++;
+            while (line[idx] && line[idx] <= ' ') idx++;
+        }
+    }
+    fclose (f);
+    return rom_size;
+}
+
+int load_dump8 (unsigned char buf[][16], int buf_len, const char *name) {
+    int rom_size = 0;
+    FILE *f;
+#define	LINELEN	1024
+    char line[LINELEN];
+    if ((f = fopen (name, "rt")) == NULL)
+        return 1;
+    while (!feof (f)) {
+        unsigned addr, idx = 0;
+        uint64_t data;
+        if (!fgets (line, LINELEN, f))
+            break;
+        if (!sscanf (line, "%d: ", &addr))
+            continue;
+        while (line[idx] > ' ') idx++;
+        while (line[idx] && line[idx] <= ' ') idx++;
+        while (sscanf (line+idx, "%lX", &data) > 0) {
+            if (addr < buf_len) {
+                printf("%x:%lx\n", addr, data);
+                for (int j = 0; j < 16; j++) {
+                    buf[addr][j] = data & 0xf;
+                    data >>= 4;
+                }
+                addr++;
+                if (rom_size < addr)
+                    rom_size = addr;
+            }
+            else
+                fprintf (stderr, "load %s: address 0x%X too big\n", name, addr);
+            while (line[idx] > ' ') idx++;
+            while (line[idx] && line[idx] <= ' ') idx++;
+        }
+    }
+    fclose (f);
+    return rom_size;
+}
+
+#if 0
+int load_dumpK (unsigned char buf[][16], int buf_len, const char *name) {
+    int rom_size = 0;
+    FILE *f;
+#define	LINELEN	1024
+    char line[LINELEN];
+    if ((f = fopen (name, "rt")) == NULL)
+        return 1;
+    while (!feof (f)) {
+        unsigned addr, data, idx = 0;
+        if (!fgets (line, LINELEN, f))
+            break;
+        if (!sscanf (line, "%d: ", &addr))
+            continue;
+        while (line[idx] > ' ') idx++;
+        while (line[idx] && line[idx] <= ' ') idx++;
+        while (sscanf (line+idx, "%X", &data) > 0) {
+            if (addr < buf_len) {
+                buf[addr++] = data;
                 if (rom_size < addr - 1)
                     rom_size = addr - 1;
             }
@@ -55,4 +124,4 @@ int load_dump (unsigned short *buf, int buf_len, const char *name) {
     fclose (f);
     return rom_size;
 }
-
+#endif

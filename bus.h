@@ -46,8 +46,8 @@ struct bus {
 
     /* ALU out for display */
     char display_digit;
-    uint8_t dpt:1;
-    uint8_t segH:1;
+    uint8_t display_dpt:1;
+    uint8_t display_segH:1;
 
     /* ALU input for key, busy */
     #define KN_BIT  0

@@ -36,6 +36,10 @@ struct chip {
 struct chip chipss[] = {
     {.process = alu_process, .priv = NULL},
     {.process = brom_process, .priv = NULL},
+    {.process = display_process, .priv = NULL},
+    {.process = key_process, .priv = NULL},
+    {.process = scom_reg_process, .priv = NULL},
+    {.process = scom_const_process, .priv = NULL},
     {.process = NULL},
 };
 
@@ -45,28 +49,35 @@ int run(struct chip chips[], struct bus *bus)
 {
 
     memset(bus, 0, sizeof(*bus));
+    bus->dstate = 15;
     while (1) {
-        for (bus->dstate = 15; bus->dstate >= 0; bus->dstate--) {
-            bus->ext = 0;
-            bus->irg = 0;
-            memset(bus->io, 0, sizeof(bus->io));
-            for (bus->sstate = 0; bus->sstate < 16; bus->sstate++) {
-                int ret;
-                bus->write = 1;
-                for (int i = 0; chips[i].process; i++) {
-                    ret = chips[i].process(chips[i].priv, bus);
-                    if (ret)
-                        return ret;
-                }
-                bus->write = 0;
-                for (int i = 0; chips[i].process; i++) {
-                    ret = chips[i].process(chips[i].priv, bus);
-                    if (ret)
-                        return ret;
-                }
+        bus->ext = 0;
+        bus->irg = 0;
+        memset(bus->io, 0, sizeof(bus->io));
+        for (bus->sstate = 0; bus->sstate < 16; bus->sstate++) {
+            int ret;
+            bus->write = 1;
+            for (int i = 0; chips[i].process; i++) {
+                ret = chips[i].process(chips[i].priv, bus);
+                if (ret)
+                    return ret;
             }
-            //DIS("EXT 0x%04x IRG 0x%04x\n", bus->ext, bus->irg);
+            bus->write = 0;
+            for (int i = 0; chips[i].process; i++) {
+                ret = chips[i].process(chips[i].priv, bus);
+                if (ret)
+                    return ret;
+            }
+            /* dstate is updated between S14/S15 */
+            if (bus->sstate == 14) {
+                if (bus->dstate)
+                    bus->dstate--;
+                else
+                    bus->dstate = 15;
+            }
         }
+        if (log_flags & LOG_SHORT)
+            LOG("EXT=0x%04x IRG=0x%04x\n", bus->ext, bus->irg);
     }
     return 0;
 }
@@ -75,6 +86,8 @@ int main()
 {
     alu_init();
     chipss[1].priv = brom_init();
+    key_init();
+    scom_const_init();
     run(chipss, &bus_state);
     return 0;
 }
