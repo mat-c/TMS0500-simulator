@@ -21,16 +21,16 @@
 #include "bus.h"
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 #include "bus.h"
 #include "emu.h"
 
 
-struct chip chipss[] = {
-    {.process = NULL, .priv = NULL},
-    {.process = NULL, .priv = NULL},
-    {.process = NULL, .priv = NULL},
+struct chip chipss[30] = {
     {.process = display_process, .priv = NULL},
-    {.process = key_process, .priv = NULL},
+    {.process = NULL, .priv = NULL},
+    {.process = NULL, .priv = NULL},
+    {.process = NULL, .priv = NULL},
     {.process = NULL},
 };
 
@@ -73,14 +73,39 @@ int run(struct chip chips[], struct bus *bus)
     return 0;
 }
 
-int main()
+static void help(void)
 {
-    int i = 0;
+    printf("-r: rom file\n");
+    printf("-s: scom const file\n");
+}
+
+int main(int argc, char *argv[])
+{
+    int opt;
+    int i = 1;
     int ret = 0;
+    char *keyb_name = NULL;
     ret |= alu_init(&chipss[i++]);
-    ret |= brom_init(&chipss[i++], "rom-SR50/TMC0521B.txt");
-    ret |= scom_const_init(&chipss[i++], "rom-SR50/TMC0521B-CONST.txt");
-    key_init();
+    while ((opt = getopt(argc, argv, "r:s:k:")) != -1) {
+        switch (opt) {
+        case 'r':
+            ret |= brom_init(&chipss[i++], optarg);
+            break;
+        case 's':
+            ret |= scom_init(&chipss[i++], optarg);
+            break;
+        case 'k':
+            keyb_name = optarg;
+            break;
+        default:
+            help();
+        }
+        if (ret)
+            break;
+    }
+    if (ret)
+        return 1;
+    ret |= key_init(&chipss[i++], keyb_name);
     run(chipss, &bus_state);
     return 0;
 }

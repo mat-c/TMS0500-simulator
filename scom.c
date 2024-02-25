@@ -150,10 +150,10 @@ static int scom_process(void *priv, struct bus *bus)
     return ret;
 }
 
-int scom_const_init(struct chip *chip, const char *name)
+int scom_init(struct chip *chip, const char *name)
 {
     int base;
-    int size;
+    unsigned int size;
     struct scom *scom;
     scom = malloc(sizeof(*scom));
     if (!scom)
@@ -168,7 +168,7 @@ int scom_const_init(struct chip *chip, const char *name)
     scom->end_reg = scom->start_reg + 2;
 
     printf("const base %d size %d\n", base, size);
-    for (int i = 0; i < size; i++) {
+    for (unsigned int i = 0; i < size; i++) {
         printf("%02d: ", i+base);
         for (int j = 15; j >= 0; j--) {
                 printf("%x", scom->CONST[i][j]);

@@ -41,8 +41,8 @@ struct brom_state {
 	uint16_t last_irg;
 
 	uint16_t data[1024];
-	int end;
-    int start;
+	unsigned int end;
+    unsigned int start;
 };
 
 #define BROM_CS 0
@@ -148,7 +148,7 @@ static int brom_process(void *priv, struct bus *bus_state)
 int brom_init(struct chip *chip, const char *name)
 {
     struct brom_state *bstate = malloc(sizeof(struct brom_state));
-    int size;
+    unsigned int size;
     int base;
     if (!bstate)
         return -1;
@@ -160,8 +160,8 @@ int brom_init(struct chip *chip, const char *name)
     printf("rom '%s'  base %d size %d\n",
             name, base, size);
 
-    if (size > sizeof(bstate->data)) {
-        printf("rom too big\n");
+    if (!size || size > sizeof(bstate->data)) {
+        printf("rom invalid\n");
         free(bstate);
         return -1;
     }

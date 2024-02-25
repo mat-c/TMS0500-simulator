@@ -29,7 +29,8 @@
 struct chip {
     int (*process)(void *priv, struct bus *bus);
     void *priv;
-    int (*dump_state)(void *priv, struct bus *bus, FILE *f);
+    //int (*dump_state)(void *priv, struct bus *bus, FILE *f);
+    void (*destroy)(void *priv);
 };
 
 
@@ -59,6 +60,6 @@ int load_dumpK (unsigned char buf[][16], int buf_len, const char *name, int *bas
 
 char *display_debug(void);
 int display_process(void *priv, struct bus *bus);
-int key_process(void *priv, struct bus *bus);
+int key_init(struct chip *chip, const char *name);
 
-int scom_const_init(struct chip *chip, const char *name);
+int scom_init(struct chip *chip, const char *name);
