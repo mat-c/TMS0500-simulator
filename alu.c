@@ -718,7 +718,9 @@ static void alu_gen_digit(struct bus *bus)
 #ifndef DISP_DBG
         if (i == 15)
             cpu.zero_suppr = 1;
-        if (i == 3 || cpu.R5 == i || cpu.B[i] >= 8)
+        if (i == 3 ||
+                (cpu.R5 == i && i != 15) ||
+                cpu.B[i] >= 8)
             cpu.zero_suppr = 0;
         if (i == 2)
             cpu.zero_suppr = 1;
