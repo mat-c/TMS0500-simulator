@@ -63,3 +63,4 @@ int display_process(void *priv, struct bus *bus);
 int key_init(struct chip *chip, const char *name);
 
 int scom_init(struct chip *chip, const char *name);
+int ram_init(struct chip *chip, int addr);

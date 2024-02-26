@@ -68,7 +68,7 @@ int run(struct chip chips[], struct bus *bus)
             }
         }
         if (log_flags & LOG_SHORT)
-            LOG("EXT=0x%04x IRG=0x%04x\n", bus->ext, bus->irg);
+            LOG(" EXT=0x%04x IRG=0x%04x\n", bus->ext, bus->irg);
     }
     return 0;
 }
@@ -84,9 +84,10 @@ int main(int argc, char *argv[])
     int opt;
     int i = 1;
     int ret = 0;
+    int ram_addr = 0;
     char *keyb_name = NULL;
     ret |= alu_init(&chipss[i++]);
-    while ((opt = getopt(argc, argv, "r:s:k:")) != -1) {
+    while ((opt = getopt(argc, argv, "r:s:k:R")) != -1) {
         switch (opt) {
         case 'r':
             ret |= brom_init(&chipss[i++], optarg);
@@ -96,6 +97,9 @@ int main(int argc, char *argv[])
             break;
         case 'k':
             keyb_name = optarg;
+            break;
+        case 'R':
+            ret |= ram_init(&chipss[i++], ram_addr++);
             break;
         default:
             help();
