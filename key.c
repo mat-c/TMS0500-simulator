@@ -77,6 +77,7 @@ static const struct keymap key_table_ti58[] = {
         {0x4A, KEY_INVERT, '~', 0}, // card inserted
         {0}
 };
+
 static const char *key_help_ti58 = 
       "[A]=A       [B]=B        [C]=C      [D]=D       [E]=E\n"
 	  "[2nd]=Esc      [INV]=I      [ln\\log]=l  [CE\\CP]=Back [CLR]=Space\n"
@@ -88,17 +89,61 @@ static const char *key_help_ti58 =
 	  "[RST\\StFlg]=r [1\\IfFlg]=1   [2\\D.MS]=2  [3\\pi]=3     [+\\Grad]=+\n"
 	  "[R/S]=$       [0\\Dsz]=0     [.\\Adv]=.   [+/-\\Prt]=n  [=\\List]=Enter\n";
 
-static const struct keymap key_table_sr56[] = {
-        {0x15, 0, 0x1B, 0},     {0x25, 0, 0, 0}, {0x35, 0, 'l', 0},   {0x55, 0, '\b', 0},  {0x65, 0, ' ', 0},
-        {0x17, 0, 'p', 0}, 	     {0x27, 0, 'x', 0},   {0x37, 0, 's', 0},   {0x57, 0, 'c', 0},   {0x67, 0, 't', 0},
-        {0x13, 0, 0, 0}, {0x23, 0, '>', 0},   {0x33, 0, '<', 0},   {0x53, 0, '&', 0},   {0x63, 0, 'y', 0},
-        {0x14, 0, 0, 0}, {0x24, 0, 'e', 0},   {0x34, 0, '(', 0},   {0x54, 0, ')', 0},   {0x64, 0, '/', 0},
-        {0x12, 0, 'g', 0},       {0x22, 0, '7', 0},   {0x32, 0, '8', 0},   {0x52, 0, '9', 0},   {0x62, 0, '*', 0},
-        {0x11, 0, 'b', 0},       {0x21, 0, '4', 0},   {0x31, 0, '5', 0},   {0x51, 0, '6', 0},   {0x61, 0, '-', 0},
-        {0x18, 0, 'r', 0},       {0x28, 0, '1', 0},   {0x38, 0, '2', 0},   {0x58, 0, '3', 0},   {0x68, 0, '+', 0},
-        {0x16, 0, '$', 0},       {0x26, 0, '0', 0},   {0x36, 0, '.', 0},   {0x56, 0, 'n', 0},   {0x66, 0, '\n', 0},
+static const struct keymap key_table_sr52[] = {
+        {0x11, 0, 'A', 0},   {0x21, 0, 'B', 0},  {0x31, 0, 'C', 0},    {0x51, 0, 'D', 0},  {0x61, 0, 'E', 0},
+        {0x12, 0, 0x1B, 0},  {0x22, 0, 'I', 0},  {0x32, 0, 'l', 0},    {0x52, 0, 0x7F, 0}, {0x62, 0, ' ', 0},
+        {0x13, 0, 'p', 0}, 	 {0x23, 0, 's', 0},  {0x33, 0, 'c', 0},    {0x53, 0, 't', 0},  {0x63, 0, 'S', 0},
+        {0x14, 0, 'g', 0},   {0x24, 0, '>', 0},  {0x34, 0, '<', 0},    {0x54, 0, '&', 0},  {0x64, 0, 'y', 0},
+        {0x15, 0, 'b', 0},   {0x25, 0, 'e', 0},  {0x35, 0, '(', 0},   {0x55, 0, ')', 0},   {0x65, 0, '/', 0},
+        {0x16, 0, 'i', 0},   {0x07, 0, '7', 0},   {0x08, 0, '8', 0},   {0x09, 0, '9', 0},    {0x66, 0, '*', 0},
+        {0x17, 0, 'd', 0},   {0x04, 0, '4', 0},   {0x05, 0, '5', 0},   {0x06, 0, '6', 0},    {0x67, 0, '-', 0},
+        {0x18, 0, 'r', 0},   {0x01, 0, '1', 0},   {0x02, 0, '2', 0},   {0x03, 0, '3', 0},    {0x68, 0, '+', 0},
+        {0x19, 0, '$', 0},   {0x0A, 0, '0', 0},   {0x29, 0, '.', 0},   {0x59, 0, 'n', 0},    {0x69, 0, '\n', 0},
+        {0x5E, KEY_ONOFF, 'R', 0},
+        {0x4A, KEY_ONOFF, '~', 0}, // card inserted
+
         {0}
 };
+static const char *key_help_sr52 = 
+      "[A]=A          [B]=B          [C]=C         [D]=D         [E]=E\n"
+	  "[2nd]=Esc      [INV]=I        [ln\\log]=l   [CE\\x!]=Back [CLR\\1/x]=Space\n"
+      "[LRN\\IND]=p    [sin\\D.MS]=s   [cos\\D/R]=c  [tan\\P/R]=t  [xsqrty\\sqrt]=S\n"
+	  "[GTO\\LBL]=g    [STO\\CMs]=>    [RCL\\Exc]=<  [SUM\\Prd]=&  [Y^x\\x^2]=y\n"
+      "[SBR\\rtn]=b    [EE\\Fix]=e     [(\\dsz]=(    [)\\pi]=)     [/\\StFlg]=/\n"
+	  "[Ins/del]=i    [7]=7          [8]=8        [9]=9        [x\\IfFlg]=*\n"
+	  "[SST\\BST]=d    [4]=4          [5]=5        [6]=6        [-\\IfErr]=-\n"
+	  "[Hlt\\rset]=r   [1]=1          [2]=2        [3]=3        [+\\IfPos]=+\n"
+	  "[R\\read]=$     [0/list]=0     [./ptr]=.    [+/-/pap]=n  [=/IfZero]=Enter\n"
+      "----------\n"
+      "RAD=R\n";
+
+
+static const struct keymap key_table_sr56[] = {
+        {0x11, 0, 0x1B, 0},  {0x21, 0, 'I', 0},   {0x31 , 0, 'l', 0},   {0x51, 0, 't', 0},   {0x61, 0, ' ', 0},
+        {0x12, 0, 'p', 0},   {0x22, 0, 'g', 0},   {0x32 , 0, 's', 0},   {0x52, 0, 'c', 0},   {0x62, 0, 't', 0},
+        {0x13, 0, 'i', 0},   {0x23, 0, 'X', 0},   {0x33 , 0, '>', 0},   {0x53, 0, '<', 0},   {0x63, 0, '&', 0},
+        {0x14, 0, '$', 0},   {0x24, 0, 'r', 0},   {0x34 , 0, 'x', 0},   {0x54 , 0, 'e', 0},  {0x64, 0, 'y', 0},
+        {0x15, 0, 0x7F, 0},  {0x25, 0, '(', 0},   {0x35, 0, ')', 0},    {0x55, 0, '/', 0},
+        {0x07, 0, '7', 0},   {0x08, 0, '8', 0},   {0x09, 0, '9', 0},    {0x56, 0, '*', 0},
+        {0x04, 0, '4', 0},   {0x05, 0, '5', 0},   {0x06, 0, '6', 0},    {0x57, 0, '-', 0},
+        {0x01, 0, '1', 0},   {0x02, 0, '2', 0},   {0x03, 0, '3', 0},    {0x58, 0, '+', 0},
+        {0x0A, 0, '0', 0},   {0x29, 0, '.', 0},   {0x39, 0, 'n', 0},    {0x59, 0, '\n', 0},
+        {0x5E, KEY_ONOFF, 'R', 0},
+
+        {0}
+};
+static const char *key_help_sr56 = 
+      "[2nd]=Esc      [INV]=I       [ln\\log]=l   [e^x\\10^x]=E [CLR]=Space\n"
+      "[LRN\\f(n)]=p  [GTO\\???]=g  [sin\\???]=s  [cos\\Int]=c  [tan\\1/x]=t\n"
+      "[SST\\BST]=i   [x<>t\\??]=X  [STO\\CMs]=>  [RCL\\Exc]=<  [SUM\\Prd]=&\n"
+      "[R/S\\NOP]=$   [RST\\???]=r  [x^2\\sqrt]=x [EE\\Fix]=e   [Y^x\\xsqrty]=y\n"
+      "[CE\\CP]=Back  [(\\subr]=(   [)\\rtn]=)    [/\\pause]=/\n"
+	  "[7]=7          [8]=8       [9]=9       [x/pi]=*\n"
+	  "[4/SUM+]=4     [5/SUM-]=5  [6]=6       [-/RAD]=-\n"
+	  "[1/Mean]=1     [2/P->R]=2  [3/R->P]=3  [+]=+\n"
+	  "[0/S.Dev.]=0   [./ptr]=.   [+/-/pap]=n [=/list]=Enter\n"
+      "----------\n"
+      "RAD=R\n";
 
 static const struct keymap key_table_sr50[] = {
         /* 50 */
@@ -106,7 +151,7 @@ static const struct keymap key_table_sr50[] = {
         {0x22, 0, 'h', 0},   {0x53, 0, 'd', 0},   {0x54 , 0, 'l', 0},   {0x51, 0, 'E', 0},   {0x31, 0, 'L', 0},
         {0x33, 0, 'x', 0},   {0x3C, 0, 'S', 0},   {0x36 , 0, 'i', 0},   {0x3D, 0, '!', 0},   {0x1A, 0, 'r', 0},
         {0x66, 0, '>', 0},   {0x68, 0, '<', 0},   {0x61 , 0, '&', 0},   {0x69 , 0, 'X', 0},   {0x1B, 0, 'Y', 0},
-        {0x26, 0, 0x7F, 0},      {0x2D, 0, 'e', 0},   {0x67, 0, 'p', 0},   {0x16, 0, '/', 0},
+        {0x26, 0, 0x7F, 0},  {0x2D, 0, 'e', 0},   {0x67, 0, 'p', 0},   {0x16, 0, '/', 0},
         {0x07, 0, '7', 0},   {0x08, 0, '8', 0},   {0x09, 0, '9', 0},   {0x17, 0, '*', 0},
         {0x04, 0, '4', 0},   {0x05, 0, '5', 0},   {0x06, 0, '6', 0},   {0x12, 0, '-', 0},
         {0x01, 0, '1', 0},   {0x02, 0, '2', 0},   {0x03, 0, '3', 0},   {0x13, 0, '+', 0},
@@ -183,6 +228,7 @@ static int key_read2(int idle)
         if (cpu.keymap[size].ascii && cpu.keymap[size].ascii == AsciiChar) {
             if (log_flags & LOG_DEBUG)
                 LOG ("{K=%02X}\n", cpu.keymap[size].key_code);
+            LOG("r.1=%c", AsciiChar);
             if (!(cpu.keymap[size].flags & KEY_ONOFF)) {
                 cpu.key[cpu.keymap[size].key_code & 0x0F] |= 1 << ((cpu.keymap[size].key_code >> 4) & 0x07);
                 cpu.key_code = cpu.keymap[size].key_code;
@@ -224,7 +270,7 @@ static int key_process(void *priv, struct bus *bus)
         }
         bus->key_line = cpu.key[bus->dstate];
 
-#if 0
+#ifdef KEEP_RUN
         // real speed simulation
         // 455kHz / 2 / 16 = 14219
         // 20ms ~ 284.375 instructions
@@ -266,13 +312,17 @@ static void key_init2(void)
     new_settings.c_lflag &= (~ECHO); // don't echo the character
     //new_settings.c_lflag &= (~ISIG); // don't automatically handle control-C
 
+#ifdef KEEP_RUN
     /* non blocking
     new_settings.c_cc[VTIME] = 0; // timeout (tenths of a second)
     new_settings.c_cc[VMIN] = 0; // minimum number of characters
     */
+    cpu.keyboardidle = 0;
+#else
     new_settings.c_cc[VTIME] = 10; // timeout (tenths of a second)
     new_settings.c_cc[VMIN] = 1; // minimum number of characters
     cpu.keyboardidle = 1;
+#endif
 
     // apply the new settings
     tcsetattr(0, TCSANOW, &new_settings);
@@ -286,9 +336,18 @@ int key_init(struct chip *chip, const char *name)
     chip->priv = NULL;
     chip->process = key_process;
 
+    printf("keymap %s\n", name);
     if (!strcmp(name, "ti58")) {
         cpu.keymap = key_table_ti58;
         printf(key_help_ti58);
+    }
+    else if (!strcmp(name, "sr52")) {
+        cpu.keymap = key_table_sr52;
+        printf(key_help_sr52);
+    }
+    else if (!strcmp(name, "sr56")) {
+        cpu.keymap = key_table_sr56;
+        printf(key_help_sr56);
     }
     else {
         cpu.keymap = key_table_sr50;
