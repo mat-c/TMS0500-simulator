@@ -40,7 +40,8 @@ struct brom_state {
 	uint16_t last_ext;
 	uint16_t last_irg;
 
-	uint16_t data[1024];
+    /* v1 1k / v2 2.5k */
+	uint16_t data[1024*5/2];
 	unsigned int end;
     unsigned int start;
 };

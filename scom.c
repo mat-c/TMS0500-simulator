@@ -22,11 +22,13 @@
 #include "emu.h"
 
 struct scom {
-    unsigned char CONST[16][16];
+    /* v1 16/ v2 32 */
+    unsigned char CONST[16*2][16];
     uint32_t fifo_const;
     int end_const;
     int start_const;
-    unsigned char SCOM[2][16];
+    /* v1 2/ v2 8 */
+    unsigned char SCOM[2*4][16];
     uint32_t fifo_reg;
     int end_reg;
     int start_reg;
@@ -115,8 +117,8 @@ static int scom_reg_process(struct scom *scom, struct bus *bus)
         if (scom->fifo_reg & 0x10) {
             int addr = (scom->fifo_reg >> 5) & 7;
             memcpy(bus->io, scom->SCOM[addr], sizeof(bus->io));
-            if (log_flags & LOG_SHORT)
-                LOG (" RCL.%d=", addr + scom->start_reg); for (int i = 15; i >= 0; i--) LOG("%X", bus->io[i]);
+            LOG (" RCL.%d=", addr + scom->start_reg); for (int i = 15; i >= 0; i--) LOG("%X", bus->io[i]);
+            LOG (" ");
         }
     }
     else if (bus->sstate == 15 && !bus->write) {
@@ -124,8 +126,8 @@ static int scom_reg_process(struct scom *scom, struct bus *bus)
         if ((scom->fifo_reg & 1) && !(scom->fifo_reg & 0x10)) {
             int addr = (scom->fifo_reg >> 5) & 7;
             memcpy(scom->SCOM[addr], bus->io, sizeof(bus->io));
-            if (log_flags & LOG_SHORT)
-                LOG (" STO.%d=", addr + scom->start_reg); for (int i = 15; i >= 0; i--) LOG("%X", bus->io[i]);
+            LOG (" STO.%d=", addr + scom->start_reg); for (int i = 15; i >= 0; i--) LOG("%X", bus->io[i]);
+            LOG (" ");
         }
         /* match STO/RCL inst */
         if ((bus->irg & 0xFF0F) == 0x0A0F) {
@@ -139,14 +141,58 @@ static int scom_reg_process(struct scom *scom, struct bus *bus)
     return 0;
 }
 
+static int scom2_reg_process(struct scom *scom, struct bus *bus)
+{
+    if (bus->sstate == 0 && bus->write) {
+        scom->fifo_reg >>= 8;
+        /* RCL */
+        if (scom->fifo_reg & 0x10) {
+            int addr = (scom->fifo_reg >> 5) & 7;
+            memcpy(bus->io, scom->SCOM[addr], sizeof(bus->io));
+            LOG (" RCL.%d=", addr + scom->start_reg); for (int i = 15; i >= 0; i--) LOG("%X", bus->io[i]);
+            LOG (" ");
+        }
+    }
+    else if (bus->sstate == 15 && !bus->write) {
+        /* fifo not empty and STO */
+        if ((scom->fifo_reg & 1) && !(scom->fifo_reg & 0x10)) {
+            int addr = (scom->fifo_reg >> 5) & 7;
+            memcpy(scom->SCOM[addr], bus->io, sizeof(bus->io));
+            LOG (" STO.%d=", addr + scom->start_reg); for (int i = 15; i >= 0; i--) LOG("%X", bus->io[i]);
+            LOG (" ");
+        }
+        /* match STO F/RCL F inst */
+        if ((bus->irg & 0xFFEF) == 0x0A0F) {
+            /* address in hex 0-F */
+            int addr = bus->io[0];
+            if (addr >= scom->start_reg && addr < scom->end_reg) {
+                addr -= scom->start_reg;
+                scom->fifo_reg |= ((addr << 5) | (bus->irg & 0x1F)) << 16; /* 2 cycles delay */
+            }
+        }
+    }
+    return 0;
+}
+
 static int scom_process(void *priv, struct bus *bus)
 {
     struct scom *scom = priv;
     int ret;
-    ret = scom_const_process(scom, bus); 
+    ret = scom_const_process(scom, bus);
     if (ret)
         return ret;
     ret = scom_reg_process(scom, bus);
+    return ret;
+}
+
+static int scom2_process(void *priv, struct bus *bus)
+{
+    struct scom *scom = priv;
+    int ret;
+    ret = scom_const_process(scom, bus);
+    if (ret)
+        return ret;
+    ret = scom2_reg_process(scom, bus);
     return ret;
 }
 
@@ -164,8 +210,6 @@ int scom_init(struct chip *chip, const char *name)
     size = load_dumpK(scom->CONST, sizeof(scom->CONST)/16, name, &base);
 	scom->end_const = base + size;
 	scom->start_const = base;
-    scom->start_reg = base / 8;
-    scom->end_reg = scom->start_reg + 2;
 
     printf("const base %d size %d\n", base, size);
     for (unsigned int i = 0; i < size; i++) {
@@ -182,8 +226,19 @@ int scom_init(struct chip *chip, const char *name)
     }
 
     chip->priv = scom;
-    chip->process = scom_process;
- 
+    if (size > 16) {
+        chip->process = scom2_process;
+        scom->start_reg = base / 32 * 8;
+        scom->end_reg = scom->start_reg + 8;
+    }
+    else {
+        chip->process = scom_process;
+        scom->start_reg = base / 16 * 2;
+        scom->end_reg = scom->start_reg + 2;
+    }
+
+
+
     return 0;
 
 }

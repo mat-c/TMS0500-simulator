@@ -24,6 +24,7 @@
 #include "emu.h"
 #include <stdio.h>
 #include <ctype.h>
+#include <string.h>
 
 // ------------------------------------
 int load_dump (unsigned short *buf, int buf_len, const char *name, int *base) {
@@ -89,6 +90,11 @@ int load_dumpK (unsigned char buf[][16], int buf_len, const char *name, int *bas
         uint64_t data;
         if (!fgets (line, LINELEN, f))
             break;
+
+        const char *end = "ADDR: CONSTANT ROM (KEY CODE)";
+        if (strncmp(end, line, strlen(end)) == 0)
+            break;
+
         if (!isdigit(line[0]) || !isdigit(line[1]) ||
             !isdigit(line[2]) || line[3] != ':')
             continue;
