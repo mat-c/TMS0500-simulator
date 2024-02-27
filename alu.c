@@ -879,9 +879,14 @@ int alu_init(struct chip *chip)
     //cpu.KR = 2;
     /* set cond for easy compare with other logs */
     cpu.flags |= FLG_COND;
+#if 1
     memset(cpu.A, 0xE, sizeof(cpu.A));
     memset(cpu.B, 0xE, sizeof(cpu.B));
-    memset(cpu.C, 0xE, sizeof(cpu.B));
+    /* ti58 is doing ADD     IO.ALL,C,#0
+     * in init sequence. This clear COND
+     * with EE..EE init
+     */
+    memset(cpu.C, 0x5, sizeof(cpu.B));
     memset(cpu.D, 0xE, sizeof(cpu.B));
     memset(cpu.E, 0xE, sizeof(cpu.B));
     cpu.SR = 0XDEAD;
@@ -889,6 +894,18 @@ int alu_init(struct chip *chip)
     cpu.fB = 0XDEAD;
     //cpu.KR |= 0xDE00;
     cpu.R5 = 0xE;
+#else
+    memset(cpu.A, 0x0, sizeof(cpu.A));
+    memset(cpu.B, 0x0, sizeof(cpu.B));
+    memset(cpu.C, 0x0, sizeof(cpu.B));
+    memset(cpu.D, 0x0, sizeof(cpu.B));
+    memset(cpu.E, 0x0, sizeof(cpu.B));
+    cpu.SR = 0;
+    cpu.fA = 0;
+    cpu.fB = 0;
+    //cpu.KR |= 0xDE00;
+    cpu.R5 = 0;
+#endif
     cpu.reset = 5;
 
     chip->process = alu_process;
