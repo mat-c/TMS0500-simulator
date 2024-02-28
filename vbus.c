@@ -50,14 +50,18 @@ int run(struct chip chips[], struct bus *bus)
             bus->write = 1;
             for (int i = 0; chips[i].process; i++) {
                 ret = chips[i].process(chips[i].priv, bus);
-                if (ret)
+                if (ret) {
+                    printf("%d error %d\n", i, ret);
                     return ret;
+                }
             }
             bus->write = 0;
             for (int i = 0; chips[i].process; i++) {
                 ret = chips[i].process(chips[i].priv, bus);
-                if (ret)
+                if (ret) {
+                    printf("%d error %d\n", i, ret);
                     return ret;
+                }
             }
             /* dstate is updated between S14/S15 */
             if (bus->sstate == 14) {
@@ -87,7 +91,7 @@ int main(int argc, char *argv[])
     int ram_addr = 0;
     char *keyb_name = NULL;
     ret |= alu_init(&chipss[i++]);
-    while ((opt = getopt(argc, argv, "r:s:k:R")) != -1) {
+    while ((opt = getopt(argc, argv, "r:s:k:Rm")) != -1) {
         switch (opt) {
         case 'r':
             ret |= brom_init(&chipss[i++], optarg);
@@ -100,6 +104,9 @@ int main(int argc, char *argv[])
             break;
         case 'R':
             ret |= ram_init(&chipss[i++], ram_addr++);
+            break;
+        case 'm':
+            ret |= ram2_init(&chipss[i++], ram_addr++);
             break;
         default:
             help();

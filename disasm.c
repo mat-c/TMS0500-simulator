@@ -256,9 +256,18 @@ void disasm (unsigned addr, unsigned opcode) {
               if (wait_arg == 15)
                   new_check_flags |= FLG_IOWW_EXPECTED;
           } else if (wait_type == 0x06) { // FLGR5
-              DIS ("MOV\tR5,f%c[1..4]", 'A' + wait_arg);
-              if (wait_arg > 1)
-                  DIS("\t;????");
+              if (wait_arg <= 1)
+                DIS ("MOV\tR5,f%c[1..4]", 'A' + wait_arg);
+              else if (wait_arg == 7) {
+                DIS ("RAM2_W");
+                new_check_flags |= FLG_IOW_EXPECTED;
+              }
+              else if (wait_arg == 8) {
+                DIS ("RAM2_R");
+                new_check_flags |= FLG_IOR_EXPECTED;
+              }
+              else
+                  DIS("MOV\tR5,f%c[1..4]\t;????", 'A' + wait_arg);
           } else if (wait_type == 0x0F) { //Register
               // STO/RCL
               if (opcode & 0x0010) {
@@ -308,7 +317,7 @@ void disasm (unsigned addr, unsigned opcode) {
         DIS("\t; ???? expected io read, but doing write !");
     }
     if ((check_flags & FLG_IOW_EXPECTED) && !(check_flags & FLAG_IO_WRITE)) {
-        DIS("\t; ???? expected io write !");
+        DIS("\t; ?? expected io write. Zero write !");
     }
     check_flags &= ~FLG_IOR_EXPECTED;
     if ((check_flags & FLG_IOWW_EXPECTED) == FLG_IOWW_EXPECTED) {

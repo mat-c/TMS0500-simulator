@@ -430,18 +430,21 @@ int execute (unsigned short opcode) {
                     break;
                 case 0x0006:
                     // FLGR5
-                    if (opcode & 0x0010) {
+                    switch (opcode & 0x00F0) {
+                      case 0x0010:
                         cpu.R5 = (cpu.fB >> 1) & 0x000F;
                         if (log_flags & LOG_DEBUG)
                             LOG ("FB=%04X ", cpu.fB);
                         if (log_flags & LOG_SHORT)
                             LOG ("R5=%01X", cpu.R5);
-                    } else {
+                        break;
+                      case 0x0000:
                         cpu.R5 = (cpu.fA >> 1) & 0x000F;
                         if (log_flags & LOG_DEBUG)
                             LOG ("FA=%04X ", cpu.fA);
                         if (log_flags & LOG_SHORT)
                             LOG ("R5=%01X", cpu.R5);
+                        break;
                     }
                     break;
                 case 0x0007:

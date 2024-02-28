@@ -23,12 +23,12 @@
 
 /*
  * cycle   irg[in]         ext[in]  IO
- * 1       RAM             x        x 
+ * 1       RAM             x        x
  * 2       x               x        x
  * 3       alu IO_out      x        I: OP: digit0, ADDR=digit[2-3]
- * 4       x               x        I/O/nothing (according OP)      
+ * 4       x               x        I/O/nothing (according OP)
  */
- 
+
 #define RAM_WAIT_CMD 1
 #define RAM_WAIT2_CMD 2
 #define RAM_EXEC_CMD 4
@@ -38,7 +38,7 @@ struct ram {
     int flags;
     int cmd;
     int addr;
-} reg;
+};
 
 static int ram_process(void *priv, struct bus *bus)
 {
@@ -72,7 +72,11 @@ static int ram_process(void *priv, struct bus *bus)
             ram->flags &= ~RAM_EXEC_CMD;
         }
         if (ram->flags & RAM_WAIT2_CMD) {
-            /* get cmd from io bus */
+            /* get cmd from io bus
+             * for addr > 99, hexa is used on top digit
+             * B0 for 110. This use the fact
+             * that carry is not done on io bus
+             */
             int addr = bus->io[3] * 10 + bus->io[2];
             int cmd = bus->io[0];
             if (addr >= ram->start && addr < ram->end) {

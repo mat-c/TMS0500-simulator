@@ -64,3 +64,4 @@ int key_init(struct chip *chip, const char *name);
 
 int scom_init(struct chip *chip, const char *name);
 int ram_init(struct chip *chip, int addr);
+int ram2_init(struct chip *chip, int addr);
