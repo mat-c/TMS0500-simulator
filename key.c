@@ -359,6 +359,8 @@ static void key_init2(void)
 
 int key_init(struct chip *chip, const char *name)
 {
+    if (!name)
+        name = "sr50";
     key_init2();
     chip->priv = NULL;
     chip->process = key_process;
