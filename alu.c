@@ -63,7 +63,6 @@ static struct {
 #define	FLG_IDLE	0x0001
 #define	FLG_HOLD	0x0002
 #define FLG_JUMP    0x0004
-#define FLG_PREG    0x0008
 #define FLG_IO_VALID    0x0400
 #define	FLG_COND	0x0800
 #define	FLG_COND_LAST	0x1000
@@ -694,7 +693,7 @@ static inline int run_early(int opcode)
 {
     switch (opcode & 0x1F00) {
         case 0x0000: /* flags */
-            return 0;
+            return 1;
         case 0x0800: /* keyboard */
             return 1; /* HOLD/COND */
         case 0x0A00: /* wait */
@@ -704,8 +703,10 @@ static inline int run_early(int opcode)
                 case 0x3: /* wait busy */
                 case 0xB: /* test busy. log cpu.digit */
                     return 1; /* COND */
+                case 0xC: /* mov KR, EXT */
+                    return 0; /* need EXT, to check XXX */
                 default:
-                    return 0;
+                    return 1;
             }
         default: /* alu */
             if ((opcode & 7) == 1) /* IO write. Can set R5/COND */
@@ -780,34 +781,15 @@ static int alu_process(void *priv, struct bus *bus)
         if (cpu.flags & FLG_COND)
             cpu.flags |= FLG_COND_LAST;
 
-        /* Output KR, unless MOV     KR,EXT[4..15]
-         * XXX what happen if opcode touch KR. What should be send to the bus ???
-         * today KR from previous bus is send. And exception is done for KR[1]/PREG see below
-         */
-        if (cpu.opcode != 0x0A0C)
-            bus->ext = ((cpu.KR >> 1) | (cpu.KR << 15)) & 0xFFF8;
-
-
-        /*
-         * Special case set KR[1]/PREG. Need imediate output on bus.
-         * To not modifiy too much execute, decode instruction here,
-         * set FLG_PREG and ignore KR[1].
-         * XXX all flags operation are imediate ?
-         */
-        /* are KR[1..3] really exist ???. Never used */
-        if (cpu.opcode == 0x0015) { /* set KR[1] */
-            bus->ext |= 1; /* PREG */
-            cpu.flags |= FLG_PREG;
-        }
-
         //XXX D change at S15W. But last alu input S15R
         //TODO update digit, dpt, segH here...
         alu_gen_digit(bus);
 
         /* we need to run here :
-         * instruction that set HOLD
-         * alu operation that write io
-         * PREG ???
+         * instruction that set HOLD (need S2W)
+         * alu operation that write io (need S0W)
+         * instruction that change KR (need SxW)
+         * instruction that set PREG (need S0W)
          *
          * we don't want to run here :
          * instruction that read io
@@ -820,9 +802,23 @@ static int alu_process(void *priv, struct bus *bus)
                 cpu.flags &= ~FLG_IO_VALID;
             }
         }
+        /* Output KR, unless MOV     KR,EXT[4..15]
+         * We need to send KR from current cycle :
+         * - KR[1]/PREG need to be set during SET KR[1] cycle
+         * - Printer code need it
+         *   -- instruction changing KR on alu/PRINTER instructions on irg
+         *   according to ti59 service manual. PRINTER instructions use ext data
+         *   from irg PRINTER instructions Dcycle.
+         *   -- running test, show that code modify KR one instruction before printer one
+         *   and we need the updated KR for correct print
+         */
+        if (cpu.opcode != 0x0A0C)
+            bus->ext = ((cpu.KR >> 1) | (cpu.KR << 15)) & 0xFFF9;
     }
     else if (bus->sstate == 1 && bus->write) {
-        /* Set COND flags. Other peripheral can also set it
+        /* Set COND flags from previous cycle.
+         * XXX in realy hardware, current COND is delayed ?
+         * Other peripheral can also set it
          * read by xrom
          */
         if (cpu.flags & FLG_COND_LAST) {
@@ -838,7 +834,7 @@ static int alu_process(void *priv, struct bus *bus)
     else if (bus->sstate == 2 && !bus->write) {
         if ((bus->ext & EXT_HOLD) == 0) {
             // clear PREG bit if bus is not hold
-            cpu.flags &= ~FLG_PREG;
+            cpu.KR &= ~0x2;
         }
     }
     else if (bus->sstate == 14 && bus->write) {
@@ -854,7 +850,6 @@ static int alu_process(void *priv, struct bus *bus)
         if (!run_early(cpu.opcode)) {
             memcpy(cpu.Sin,  bus->io, sizeof(bus->io));
             execute(cpu.opcode);
-            cpu.KR &= ~0x2;
         }
         /* save next opcode */
         cpu.opcode = bus->irg;
