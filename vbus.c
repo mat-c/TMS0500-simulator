@@ -63,8 +63,9 @@ int run(struct chip chips[], struct bus *bus)
                     return ret;
                 }
             }
-            /* dstate is updated between S14/S15 */
+            /* dstate is updated between S14R/S15W */
             if (bus->sstate == 14) {
+                bus->key_line = 0;
                 if (bus->dstate)
                     bus->dstate--;
                 else

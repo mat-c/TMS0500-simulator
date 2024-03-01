@@ -89,7 +89,9 @@ static const char *key_help_ti58 =
 	  "[GTO\\Pause]=g [7\\x=t]=7     [8\\Nop]=8   [9\\Op]=9     [x\\Deg]=*\n"
 	  "[SBR\\Lbl]=b   [4\\x>=t]=4    [5\\S+]=5    [6\\avg]=6    [-\\Rad]=-\n"
 	  "[RST\\StFlg]=r [1\\IfFlg]=1   [2\\D.MS]=2  [3\\pi]=3     [+\\Grad]=+\n"
-	  "[R/S]=$       [0\\Dsz]=0     [.\\Adv]=.   [+/-\\Prt]=n  [=\\List]=Enter\n";
+	  "[R/S]=$       [0\\Dsz]=0     [.\\Adv]=.   [+/-\\Prt]=n  [=\\List]=Enter\n"
+      "-------\n"
+	  "PRINT=#        TRACE=?        ADVANCE=@\n";
 
 static const struct keymap key_table_sr52[] = {
         {0x11, 0, 'A', 0},   {0x21, 0, 'B', 0},  {0x31, 0, 'C', 0},    {0x51, 0, 'D', 0},  {0x61, 0, 'E', 0},
@@ -103,6 +105,10 @@ static const struct keymap key_table_sr52[] = {
         {0x19, 0, '$', 0},   {0x0A, 0, '0', 0},   {0x29, 0, '.', 0},   {0x59, 0, 'n', 0},    {0x69, 0, '\n', 0},
         {0x5E, KEY_ONOFF, 'R', 0},
         {0x4A, KEY_ONOFF, '~', 0}, // card inserted
+        // printer buttons
+        {0x2C, 0, '#', 0}, // PRINT
+        {0x2F, KEY_ONOFF, '?', 0}, // TRACE
+        {0x0C, 0, '@', 0}, // ADVANCE
 
         {0}
 };
@@ -131,6 +137,10 @@ static const struct keymap key_table_sr56[] = {
         {0x01, 0, '1', 0},   {0x02, 0, '2', 0},   {0x03, 0, '3', 0},    {0x58, 0, '+', 0},
         {0x0A, 0, '0', 0},   {0x29, 0, '.', 0},   {0x39, 0, 'n', 0},    {0x59, 0, '\n', 0},
         {0x5E, KEY_ONOFF, 'R', 0},
+        // printer buttons
+        {0x2C, 0, '#', 0}, // PRINT
+        {0x2F, KEY_ONOFF, '?', 0}, // TRACE
+        {0x0C, 0, '@', 0}, // ADVANCE
 
         {0}
 };
@@ -183,10 +193,6 @@ static const struct keymap key_table_sr50[] = {
         {0x01, 0, '1', 0},   {0x02, 0, '2', 0},   {0x03, 0, '3', 0},   {0x13, 0, '+', 0},
         {0x0A, 0, '0', 0},   {0x23, 0, '.', 0},   {0x27, 0, 'n', 0},   {0x11, 0, '\n', 0},
         {0x5E, KEY_ONOFF, 'R', 0},
-        // printer buttons
-        {0x2C, 0, '#', 0}, // PRINT
-        {0x2F, KEY_ONOFF, '?', 0}, // TRACE
-        {0x0C, 0, '@', 0}, // ADVANCE
         {0}
 };
 
@@ -227,11 +233,12 @@ static void Sleep(unsigned long long delay)
  * SR51-II : 2 scan with key press, 3(4*?) scan no key
  *
  * */
-static int key_read2(int idle)
+static int key_read2(struct bus *bus)
 {
 
     unsigned char AsciiChar = 0;
     int size;
+    int idle = bus->idle;
     if (cpu.keyboardidle && !idle)
         return 0;
 
@@ -242,9 +249,10 @@ static int key_read2(int idle)
          * -1 no key
          */
         LOG("key count %d", cpu.key_count);
-        if (cpu.key_count == 1)
-            cpu.key[cpu.key_code & 0x0F] ^= 1 << ((cpu.key_code >> 4) & 0x07);
-        cpu.key_count--;
+        //if (cpu.key_count > 1 && bus->dstate == (cpu.key_code & 0x0F))
+        //    bus->key_line |= 1 << ((cpu.key_code >> 4) & 0x07);
+        if (cpu.key_count <= 1)
+            cpu.key_count--;
         return 0;
     }
     int ret = read(0, &AsciiChar, 1);
@@ -259,9 +267,9 @@ static int key_read2(int idle)
                 LOG ("{K=%02X}\n", cpu.keymap[size].key_code);
             LOG("r.1=%c", AsciiChar);
             if (!(cpu.keymap[size].flags & KEY_ONOFF)) {
-                cpu.key[cpu.keymap[size].key_code & 0x0F] |= 1 << ((cpu.keymap[size].key_code >> 4) & 0x07);
+                //cpu.key[cpu.keymap[size].key_code & 0x0F] |= 1 << ((cpu.keymap[size].key_code >> 4) & 0x07);
                 cpu.key_code = cpu.keymap[size].key_code;
-                cpu.key_count = 2;
+                cpu.key_count = 3;
             }
             else {
                 /* only revert key state */
@@ -292,12 +300,16 @@ static int key_process(void *priv, struct bus *bus)
      * at state S0 (for hold reason)
      */
     if (bus->sstate == 15 && !bus->write) {
-        bus->key_line = 0;
         if ((bus->irg & 0xFF08) == 0x0800 && !(bus->ext & EXT_HOLD)) {
-            if (key_read2(bus->idle) < 0)
+            if (key_read2(bus) < 0)
                 return -1;
         }
-        bus->key_line = cpu.key[bus->dstate];
+        if (bus->dstate == (cpu.key_code & 0x0F) && cpu.key_count > 1) {
+            bus->key_line |= 1 << ((cpu.key_code >> 4) & 0x07);
+            cpu.key_count--;
+        }
+
+        bus->key_line |= cpu.key[bus->dstate];
 
 #ifdef KEEP_RUN
         // real speed simulation
@@ -367,6 +379,8 @@ int key_init(struct chip *chip, const char *name)
 
     printf("keymap %s\n", name);
     if (!strcmp(name, "ti58")) {
+        /* if unset, enable card reader code
+         */
         cpu.key[7] |= (1 << KR_BIT);
         cpu.keymap = key_table_ti58;
         printf(key_help_ti58);
