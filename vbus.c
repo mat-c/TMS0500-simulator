@@ -109,6 +109,9 @@ int main(int argc, char *argv[])
         case 'm':
             ret |= ram2_init(&chipss[i++], ram_addr++);
             break;
+        case 'p':
+            ret |= printer_init(&chipss[i++]);
+            break;
         default:
             help();
         }
