@@ -90,12 +90,13 @@ int main(int argc, char *argv[])
     int i = 1;
     int ret = 0;
     int ram_addr = 0;
+    int disasm = 0;
     char *keyb_name = NULL;
     ret |= alu_init(&chipss[i++]);
-    while ((opt = getopt(argc, argv, "r:s:k:Rm")) != -1) {
+    while ((opt = getopt(argc, argv, "r:s:k:Rmdp")) != -1) {
         switch (opt) {
         case 'r':
-            ret |= brom_init(&chipss[i++], optarg);
+            ret |= brom_init(&chipss[i++], optarg, disasm);
             break;
         case 's':
             ret |= scom_init(&chipss[i++], optarg);
@@ -112,6 +113,9 @@ int main(int argc, char *argv[])
         case 'p':
             ret |= printer_init(&chipss[i++]);
             break;
+        case 'd':
+            disasm = 1;
+            break;
         default:
             help();
         }
@@ -120,6 +124,10 @@ int main(int argc, char *argv[])
     }
     if (ret)
         return 1;
+
+    if (disasm) {
+        return 0;
+    }
     ret |= key_init(&chipss[i++], keyb_name);
     run(chipss, &bus_state);
     return 0;

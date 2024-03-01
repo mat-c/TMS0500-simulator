@@ -146,7 +146,21 @@ static int brom_process(void *priv, struct bus *bus_state)
     return 0;
 }
 
-int brom_init(struct chip *chip, const char *name)
+static void dis(struct brom_state *bstate)
+{
+    int addr;
+    int rom_size = bstate->end - bstate->start;
+    FILE *old_out = log_file;
+    log_file = stderr;
+      for (addr = 0; addr < rom_size; addr ++) {
+        DIS("%04X:\t", addr + bstate->start);
+        disasm (addr, bstate->data[addr]);
+        DIS("\n");
+      }
+    log_file = old_out;
+}
+
+int brom_init(struct chip *chip, const char *name, int disasm)
 {
     struct brom_state *bstate = malloc(sizeof(struct brom_state));
     unsigned int size;
@@ -166,10 +180,12 @@ int brom_init(struct chip *chip, const char *name)
         free(bstate);
         return -1;
     }
-    //ret = load_dump(bstate->data, sizeof(bstate->data), "rom-SR50r1/TMC0521E.txt");
-    //ret = load_dump(bstate->data, sizeof(bstate->data), "rom-SR50A/TMC0531A.txt");
 	bstate->end = base + size;
     bstate->start = base;
+
+    if (disasm) {
+        dis(bstate);
+    }
     chip->priv = bstate;
     chip->process = brom_process;
     return 0;

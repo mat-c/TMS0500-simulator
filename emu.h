@@ -23,7 +23,6 @@
 #include <stddef.h>
 #include "bus.h"
 
-#define SR50
 #define TEST_MODE
 
 struct chip {
@@ -52,7 +51,7 @@ void disasm (unsigned addr, unsigned opcode);
 int alu_init(struct chip *chip);
 
 
-int brom_init(struct chip *chip, const char *name);
+int brom_init(struct chip *chip, const char *name, int disasm);
 
 int load_dump (unsigned short *buf, int buf_len, const char *name, int *base);
 int load_dumpK (unsigned char buf[][16], int buf_len, const char *name, int *base);
