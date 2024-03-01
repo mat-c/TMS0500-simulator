@@ -161,8 +161,8 @@ static const char *prn[16] = {
   "PRT_PRINT",
   "PRT_FEED",
   "CRD_WRITE",
-  "??.xD\t\t; no-op??",
-  "??.xE\t\t; set COND??",
+  "??.xD\t\t; no-op????",
+  "??.xE\t\t; set COND????",
   "RAM_OP"
 };
 static const char *no_op[16] = {
@@ -192,6 +192,7 @@ static const char *no_op[16] = {
 #define FLG_IOWW_EXPECTED 0x6
 #define FLAG_IO_READ 0x10
 #define FLAG_IO_WRITE 0x20
+#define FLAG_IO_WRITE_PREV 0x40
 
 static unsigned check_flags;
 
@@ -213,8 +214,8 @@ void disasm (unsigned addr, unsigned opcode) {
         DIS ("BRA%c\t%04X", (opcode&0x0800) ? '1' : '0', dest);
         if ((opcode & 0x17FF) == 0x1002)
             DIS ("\t; clear COND");
-        return;
     }
+    else
     switch ((opcode>>8)&0x0F) {
         // special instructions
         case 0x00:
@@ -260,16 +261,19 @@ void disasm (unsigned addr, unsigned opcode) {
                 DIS ("MOV\tR5,f%c[1..4]", 'A' + wait_arg);
               else if (wait_arg == 7) {
                 DIS ("RAM2_W");
+                check_flags &= ~FLAG_IO_WRITE_PREV;
                 new_check_flags |= FLG_IOW_EXPECTED;
               }
               else if (wait_arg == 8) {
                 DIS ("RAM2_R");
+                check_flags &= ~FLAG_IO_WRITE_PREV;
                 new_check_flags |= FLG_IOR_EXPECTED;
               }
               else
                   DIS("MOV\tR5,f%c[1..4]\t;????", 'A' + wait_arg);
           } else if (wait_type == 0x0F) { //Register
               // STO/RCL
+              check_flags &= ~FLAG_IO_WRITE_PREV;
               if (opcode & 0x0010) {
                   DIS ("RCL %c", 'F' + ((opcode & 0xF0)>>5));
                   new_check_flags |= FLG_IOR_EXPECTED;
@@ -277,12 +281,13 @@ void disasm (unsigned addr, unsigned opcode) {
                   DIS ("STO %c", 'F' + ((opcode & 0xF0)>>5));
                   new_check_flags |= FLG_IOW_EXPECTED;
               }
-              if (opcode & 0xc0)
+              if (opcode & 0x80)
                   DIS("\t;???? %d", opcode & 0xc0);
           } else if (wait_type == 0x0E) { // NOOP/LIB
               DIS (no_op[wait_arg]);
           } else {
               DIS (wait[opcode&0x0F], wait_arg);
+              /* 0 : wait Dstate, 5 : tst KR[arg], 7 mov R5, #arg */
               if (!(wait_type == 0 || wait_type == 5 || wait_type == 7) &&
                       wait_arg)
                   DIS("\t;????");
@@ -303,7 +308,7 @@ void disasm (unsigned addr, unsigned opcode) {
     if (sum[opcode&0x07][0] == 'I' && !(check_flags & FLG_IOW_EXPECTED)) {
         DIS("\t; output ignore (use R5/COND)");
         if (mask[(opcode>>8)&0x0F][0] == 'A')
-            DIS(" ????");
+            new_check_flags |= FLAG_IO_WRITE_PREV;
     }
     if (sum[opcode&0x07][0] == 'I')
         check_flags |= FLAG_IO_WRITE;
@@ -312,6 +317,11 @@ void disasm (unsigned addr, unsigned opcode) {
 
     break;
   }
+
+    if (check_flags & FLAG_IO_WRITE_PREV) {
+            DIS("\t; unused IO.ALL write ????");
+            check_flags &= ~FLAG_IO_WRITE_PREV;
+    }
 
     if ((check_flags & FLG_IOR_EXPECTED) && !(check_flags & FLAG_IO_READ)) {
         DIS("\t; ???? expected io read, but doing write !");
