@@ -44,6 +44,7 @@ int run(struct chip chips[], struct bus *bus)
     while (1) {
         bus->ext = 0;
         bus->irg = 0;
+        bus->addr = -1;
         memset(bus->io, 0, sizeof(bus->io));
         for (bus->sstate = 0; bus->sstate < 16; bus->sstate++) {
             int ret;
@@ -121,6 +122,7 @@ int main(int argc, char *argv[])
             break;
         default:
             help();
+            ret = 1;
         }
         if (ret)
             break;

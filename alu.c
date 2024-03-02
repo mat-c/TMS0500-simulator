@@ -73,6 +73,7 @@ static struct {
   // CPU cycle counter (used to simulate real CPU frequency)
   unsigned cycle;
 
+  int addr;
   int reset;
   int zero_suppr;
 } cpu;
@@ -428,7 +429,7 @@ int execute (unsigned short opcode) {
                         LOG ("COND=%u", (cpu.flags & FLG_COND) != 0);
                     break;
                 case 0x0006:
-                    // FLGR5
+                    // FLGR5 + peripherals
                     switch (opcode & 0x00F0) {
                       case 0x0010:
                         cpu.R5 = (cpu.fB >> 1) & 0x000F;
@@ -764,17 +765,19 @@ static int alu_process(void *priv, struct bus *bus)
     cpu.key = bus->key_line;
 
     if (cpu.reset) {
-        if (bus->sstate == 0 && bus->write)
+        if (bus->sstate == 0 && bus->write && cpu.reset-- > 1)
             bus->ext = 1;
-        if (bus->sstate == 15 && !bus->write) {
-            cpu.reset--;
+        else if (bus->sstate == 15 && !bus->write && cpu.reset == 1) {
             cpu.opcode = bus->irg;
+            cpu.addr = bus->addr;
+            if (bus->addr == -1)
+                return 1;
         }
         return 0;
     }
 
     if (bus->sstate == 0 && bus->write) {
-        debug(bus->addr, cpu.opcode);
+        debug(cpu.addr, cpu.opcode);
         cpu.flags &= ~FLG_HOLD;
         memset(cpu.Sin, 0, sizeof(cpu.Sin));
         memset(cpu.Sout, 0, sizeof(cpu.Sin));
@@ -853,9 +856,13 @@ static int alu_process(void *priv, struct bus *bus)
         }
         /* save next opcode */
         cpu.opcode = bus->irg;
+        cpu.addr = bus->addr;
         /* KR[1] and KR[2] not used. Reuse them to save COND, HOLD ?
          * XXX check if some KR instruction can clear it
          * */
+
+        if (bus->addr == -1)
+            return 1;
     }
 
     bus->idle = cpu.flags & FLG_IDLE;
@@ -890,7 +897,7 @@ int alu_init(struct chip *chip)
     cpu.SR = 0XDEAD;
     cpu.fA = 0XDEAD;
     cpu.fB = 0XDEAD;
-    //cpu.KR |= 0xDE00;
+    cpu.KR |= 0xDEAD;
     cpu.R5 = 0xE;
 #else
     memset(cpu.A, 0x0, sizeof(cpu.A));
