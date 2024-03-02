@@ -120,7 +120,7 @@ static void brom_process_out(struct brom_state *bstate, struct bus *bus_state)
          */
         assert(bus_state->irg == 0);
         bus_state->irg = bstate->data[addr];
-        bus_state->addr = addr;
+        bus_state->addr = addr + bstate->start;
         //DIS("addr%d new irg%04x\n", addr, bus_state->irg);
     }
 }
@@ -154,6 +154,7 @@ static void dis(struct brom_state *bstate)
     log_file = stderr;
       for (addr = 0; addr < rom_size; addr ++) {
         DIS("%04X:\t", addr + bstate->start);
+        DIS("%04X:\t", bstate->data[addr]);
         disasm (addr, bstate->data[addr]);
         DIS("\n");
       }
