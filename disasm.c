@@ -94,7 +94,7 @@ static const char *alu[32] = {
   "ADD\t%s.%s,C,const",
   "SUB\t%s.%s,C,const",
   "MOV\t%s.%s,R5",
-  "MOV\t%s.%s,-R5"
+  "MOV\t%s.%s,-R5\t; ????"
 };
 // I2..0
 static const char *sum[8] = {
@@ -189,7 +189,8 @@ static const char *no_op[16] = {
 /* check flags */
 #define FLG_IOR_EXPECTED 0x1
 #define FLG_IOW_EXPECTED 0x2
-#define FLG_IOWW_EXPECTED 0x6
+#define FLG_IOWx_EXPECTED 0x6
+#define FLG_IOx_EXPECTED 0x8
 #define FLAG_IO_READ 0x10
 #define FLAG_IO_WRITE 0x20
 #define FLAG_IO_WRITE_PREV 0x40
@@ -255,7 +256,7 @@ void disasm (unsigned addr, unsigned opcode) {
               /* RAM op*/
               /* expect IO Wx x can be R or W or no io (delete) */
               if (wait_arg == 15)
-                  new_check_flags |= FLG_IOWW_EXPECTED;
+                  new_check_flags |= FLG_IOWx_EXPECTED;
           } else if (wait_type == 0x06) { // FLGR5
               if (wait_arg <= 1)
                 DIS ("MOV\tR5,f%c[1..4]", 'A' + wait_arg);
@@ -263,6 +264,12 @@ void disasm (unsigned addr, unsigned opcode) {
                 DIS ("RAM2_W");
                 check_flags &= ~FLAG_IO_WRITE_PREV;
                 new_check_flags |= FLG_IOW_EXPECTED;
+              }
+              else if (wait_arg == 9) {
+                DIS ("PRT2_STEP\t;????");
+              }
+              else if (wait_arg == 0xA) {
+                DIS ("PRT2\t;????");
               }
               else if (wait_arg == 8) {
                 DIS ("RAM2_R");
@@ -304,8 +311,8 @@ void disasm (unsigned addr, unsigned opcode) {
     if ((opcode & 0xF0) != 0x00 && (opcode & 0xF0) != 0x20 && (opcode & 0xF0) != 0xD0 && *N[(opcode>>8)&0x0F] != '0')
       DIS ("|#%s", N[(opcode>>8)&0x0F]);
 
-    /* IO write */
-    if (sum[opcode&0x07][0] == 'I' && !(check_flags & FLG_IOW_EXPECTED)) {
+    /* IO write. Do not ouput log, if there may be a write access (FLG_IOx_EXPECTED) */
+    if (sum[opcode&0x07][0] == 'I' && !(check_flags & (FLG_IOW_EXPECTED|FLG_IOx_EXPECTED))) {
         DIS("\t; output ignore (use R5/COND)");
         if (mask[(opcode>>8)&0x0F][0] == 'A')
             new_check_flags |= FLAG_IO_WRITE_PREV;
@@ -330,9 +337,10 @@ void disasm (unsigned addr, unsigned opcode) {
         DIS("\t; ?? expected io write. Zero write !");
     }
     check_flags &= ~FLG_IOR_EXPECTED;
-    if ((check_flags & FLG_IOWW_EXPECTED) == FLG_IOWW_EXPECTED) {
-        check_flags &= ~FLG_IOWW_EXPECTED;
-        check_flags |= FLG_IOW_EXPECTED;
+    check_flags &= ~FLG_IOx_EXPECTED;
+    if ((check_flags & FLG_IOWx_EXPECTED) == FLG_IOWx_EXPECTED) {
+        check_flags &= ~FLG_IOWx_EXPECTED;
+        check_flags |= FLG_IOx_EXPECTED;
     } else if (check_flags & FLG_IOW_EXPECTED)
         check_flags &= ~FLG_IOW_EXPECTED;
 
@@ -340,7 +348,7 @@ void disasm (unsigned addr, unsigned opcode) {
 
     if (new_check_flags) {
         if (check_flags)
-            DIS("\t; ???? too much check");
+            DIS("\t; ???? too much check old=0x%x new=0x%x", check_flags, new_check_flags);
         check_flags = new_check_flags;
     }
 }
