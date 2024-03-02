@@ -26,11 +26,8 @@
 #include "emu.h"
 
 
-struct chip chipss[30] = {
-    {.process = display_process, .priv = NULL},
-    {.process = NULL, .priv = NULL},
-    {.process = NULL, .priv = NULL},
-    {.process = NULL, .priv = NULL},
+#define CHIPS_NUM_MAX 30
+struct chip chipss[CHIPS_NUM_MAX] = {
     {.process = NULL},
 };
 
@@ -88,7 +85,7 @@ static void help(void)
 int main(int argc, char *argv[])
 {
     int opt;
-    int i = 1;
+    int i = 0;
     int ret = 0;
     int ram_addr = 0;
     int disasm = 0;
@@ -124,7 +121,7 @@ int main(int argc, char *argv[])
             help();
             ret = 1;
         }
-        if (ret)
+        if (ret || i == CHIPS_NUM_MAX)
             break;
     }
     if (ret)
@@ -133,6 +130,11 @@ int main(int argc, char *argv[])
     if (disasm) {
         return 0;
     }
+
+    if (i + 2 > CHIPS_NUM_MAX)
+        return 2;
+
+    ret |= display_init(&chipss[i++], keyb_name);
     ret |= key_init(&chipss[i++], keyb_name);
     run(chipss, &bus_state);
     return 0;

@@ -23,7 +23,8 @@
 
 #define BUFFER_SIZE 20
 struct print {
-    char buffer[20];
+    /* NULL character at the end */
+    char buffer[BUFFER_SIZE+1];
     int head;
     int busy;
 };
@@ -175,7 +176,7 @@ static int print_process(void *priv, struct bus *bus)
                 break;
             case 0x0AA8:
                 /* print */
-                printf("|      %.20s\n", print->buffer);
+                display_print(print->buffer);
                 LOG("PRINT[%d]='%.20s' ", print->head, print->buffer);
                 break;
             case 0x0AB8:
@@ -196,7 +197,8 @@ int printer_init(struct chip *chip)
     struct print *printer;
 
     printer = malloc(sizeof(*printer));
-    memset(printer->buffer, 'X', sizeof(printer->buffer));
+    memset(printer->buffer, 'X', BUFFER_SIZE);
+    printer->buffer[BUFFER_SIZE] = '\0';
     printer->head = 5;
     printer->busy = 0;
     chip->priv = printer;

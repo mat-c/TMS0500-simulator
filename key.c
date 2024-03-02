@@ -102,7 +102,7 @@ static const struct keymap key_table_sr52[] = {
         {0x16, 0, 'i', 0},   {0x07, 0, '7', 0},   {0x08, 0, '8', 0},   {0x09, 0, '9', 0},    {0x66, 0, '*', 0},
         {0x17, 0, 'd', 0},   {0x04, 0, '4', 0},   {0x05, 0, '5', 0},   {0x06, 0, '6', 0},    {0x67, 0, '-', 0},
         {0x18, 0, 'r', 0},   {0x01, 0, '1', 0},   {0x02, 0, '2', 0},   {0x03, 0, '3', 0},    {0x68, 0, '+', 0},
-        {0x19, 0, '$', 0},   {0x0A, 0, '0', 0},   {0x29, 0, '.', 0},   {0x59, 0, 'n', 0},    {0x69, 0, '\n', 0},
+        {0x19, 0, '$', 0},   {0x0A, 0, '0', 0},   {0x39, 0, '.', 0},   {0x59, 0, 'n', 0},    {0x69, 0, '\n', 0},
         {0x5E, KEY_ONOFF, 'R', 0},
         {0x4A, KEY_ONOFF, '~', 0}, // card inserted
         // printer buttons
@@ -278,13 +278,15 @@ static int key_read2(struct bus *bus)
 
 #ifdef TEST_MODE
             static int last_op;
+            static char buffer[21];
             if (!isdigit(AsciiChar) && AsciiChar != '.' && AsciiChar != 'n') {
-                printf("|      %s key %c (%x)\n", display_debug(),
+                snprintf(buffer, sizeof(buffer), " key %c (%x)",
                         AsciiChar=='\n'?'=':AsciiChar, AsciiChar);
+                display_dbgprint(buffer);
                 last_op = 1;
             }
             else if (last_op) {
-                printf("|      %s res\n", display_debug());
+                display_dbgprint(" res");
                 last_op = 0;
             }
 #endif

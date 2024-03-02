@@ -58,8 +58,9 @@ int load_dumpK (unsigned char buf[][16], int buf_len, const char *name, int *bas
 int load_dump8 (unsigned char *buf, int buf_len, const char *name);
 
 
-char *display_debug(void);
-int display_process(void *priv, struct bus *bus);
+int display_init(struct chip *chip, const char *name);
+void display_print(const char *line);
+void display_dbgprint(const char *line);
 int key_init(struct chip *chip, const char *name);
 
 int scom_init(struct chip *chip, const char *name);

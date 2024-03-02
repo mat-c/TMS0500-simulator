@@ -756,6 +756,11 @@ static void alu_gen_digit(struct bus *bus)
             bus->display_segH = 1;
 #endif
     }
+    else {
+        /* output at Srate */
+        if (cpu.fA)
+            bus->display_segH = 1;
+    }
 }
 
 static int alu_process(void *priv, struct bus *bus)
@@ -897,7 +902,8 @@ int alu_init(struct chip *chip)
     cpu.SR = 0XDEAD;
     cpu.fA = 0XDEAD;
     cpu.fB = 0XDEAD;
-    cpu.KR |= 0xDEAD;
+    /* SR51 don't clear KR */
+    //cpu.KR = 0xDEAD;
     cpu.R5 = 0xE;
 #else
     memset(cpu.A, 0x0, sizeof(cpu.A));
