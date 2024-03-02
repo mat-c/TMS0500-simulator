@@ -23,7 +23,7 @@
 #include <stddef.h>
 #include "bus.h"
 
-#define TEST_MODE
+//#define TEST_MODE
 
 struct chip {
     int (*process)(void *priv, struct bus *bus);
@@ -55,6 +55,7 @@ int brom_init(struct chip *chip, const char *name, int disasm);
 
 int load_dump (unsigned short *buf, int buf_len, const char *name, int *base);
 int load_dumpK (unsigned char buf[][16], int buf_len, const char *name, int *base);
+int load_dump8 (unsigned char *buf, int buf_len, const char *name);
 
 
 char *display_debug(void);
@@ -65,3 +66,5 @@ int scom_init(struct chip *chip, const char *name);
 int ram_init(struct chip *chip, int addr);
 int ram2_init(struct chip *chip, int addr);
 int printer_init(struct chip *chip);
+
+int lib_init(struct chip *chip, const char *name);

@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
     int disasm = 0;
     char *keyb_name = NULL;
     ret |= alu_init(&chipss[i++]);
-    while ((opt = getopt(argc, argv, "r:s:k:Rmdp")) != -1) {
+    while ((opt = getopt(argc, argv, "r:s:k:Rmdpl:")) != -1) {
         switch (opt) {
         case 'r':
             ret |= brom_init(&chipss[i++], optarg, disasm);
@@ -112,6 +112,9 @@ int main(int argc, char *argv[])
             break;
         case 'p':
             ret |= printer_init(&chipss[i++]);
+            break;
+        case 'l':
+            ret |= lib_init(&chipss[i++], optarg);
             break;
         case 'd':
             disasm = 1;

@@ -133,8 +133,7 @@ int load_dumpK (unsigned char buf[][16], int buf_len, const char *name, int *bas
     return rom_size;
 }
 
-#if 0
-int load_dumpK (unsigned char buf[][16], int buf_len, const char *name) {
+int load_dump8 (unsigned char *buf, int buf_len, const char *name) {
     int rom_size = 0;
     FILE *f;
 #define	LINELEN	1024
@@ -142,9 +141,14 @@ int load_dumpK (unsigned char buf[][16], int buf_len, const char *name) {
     if ((f = fopen (name, "rt")) == NULL)
         return 1;
     while (!feof (f)) {
-        unsigned addr, data, idx = 0;
+        int addr;
+        unsigned data, idx = 0;
         if (!fgets (line, LINELEN, f))
             break;
+        if (!isdigit(line[0]) || !isdigit(line[1]) ||
+                !isdigit(line[2]) || !isdigit(line[3]) ||
+                line[4] != ':')
+            continue;
         if (!sscanf (line, "%d: ", &addr))
             continue;
         while (line[idx] > ' ') idx++;
@@ -152,8 +156,8 @@ int load_dumpK (unsigned char buf[][16], int buf_len, const char *name) {
         while (sscanf (line+idx, "%X", &data) > 0) {
             if (addr < buf_len) {
                 buf[addr++] = data;
-                if (rom_size < addr - 1)
-                    rom_size = addr - 1;
+                if (rom_size < addr)
+                    rom_size = addr;
             }
             else
                 fprintf (stderr, "load %s: address 0x%X too big\n", name, addr);
@@ -164,4 +168,3 @@ int load_dumpK (unsigned char buf[][16], int buf_len, const char *name) {
     fclose (f);
     return rom_size;
 }
-#endif
