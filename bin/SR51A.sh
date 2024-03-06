@@ -1,2 +1,3 @@
 #! /bin/sh
-./main -r rom/rom-SR51Ar2/TMC0532A.txt -s rom/rom-SR51Ar2/TMC0532A-CONST.txt -r rom/rom-SR51Ar2/TMC0533A.txt -s rom/rom-SR51/rom/rom-SR51Ar2/TMC0533A-CONST.txt $@
+PRINT="-r rom/rom-print/TMC0561.txt -p"
+./main -r rom/rom-SR51A/TMC0532A.txt -s rom/rom-SR51A/TMC0532A-CONST.txt -r rom/rom-SR51A/TMC0533A.txt -s rom/rom-SR51A/TMC0533A-CONST.txt -k sr51 $PRINT $@

@@ -123,7 +123,8 @@ static const char *key_help_sr52 =
 	  "[Hlt\\rset]=r   [1]=1          [2]=2        [3]=3        [+\\IfPos]=+\n"
 	  "[R\\read]=$     [0/list]=0     [./ptr]=.    [+/-/pap]=n  [=/IfZero]=Enter\n"
       "----------\n"
-      "RAD=R\n";
+      "RAD=R\n"
+	  "PRINT=#        TRACE=?        ADVANCE=@\n";
 
 
 static const struct keymap key_table_sr56[] = {
@@ -155,7 +156,8 @@ static const char *key_help_sr56 =
 	  "[1/Mean]=1     [2/P->R]=2  [3/R->P]=3  [+]=+\n"
 	  "[0/S.Dev.]=0   [./ptr]=.   [+/-/pap]=n [=/list]=Enter\n"
       "----------\n"
-      "RAD=R\n";
+      "RAD=R\n"
+	  "PRINT=#        TRACE=?        ADVANCE=@\n";
 
 static const struct keymap key_table_sr51II[] = {
         {0x15, 0, 0x1B, 0},  {0x25, 0, 's', 0},  {0x35, 0, 'c', 0},    {0x55, 0, 't', 0}, {0x65, 0, ' ', 0},
@@ -180,6 +182,40 @@ static const char *key_help_sr51II =
 	  "[CE]=Back     [0]=0     [.]=.    [+/-]=n  [=]=Enter\n";
 
 
+static const struct keymap key_table_sr51[] = {
+        /* 50 */
+        {0x24, 0, 'a', 0},   {0x57, 0, 's', 0},   {0x56 , 0, 'c', 0},   {0x5D, 0, 't', 0},   {0x21, 0, ' ', 0},
+        {0x22, 0, 'h', 0},   {0x53, 0, 'd', 0},   {0x54 , 0, 'l', 0},   {0x51, 0, 'E', 0},   {0x31, 0, 'L', 0},
+        {0x33, 0, 'x', 0},   {0x3C, 0, 'S', 0},   {0x36 , 0, 'i', 0},   {0x3D, 0, '!', 0},   {0x1A, 0, 'r', 0},
+        {0x66, 0, '>', 0},   {0x68, 0, '<', 0},   {0x61 , 0, '&', 0},   {0x69 , 0, 'X', 0},   {0x1B, 0, 'Y', 0},
+        {0x26, 0, 0x7F, 0},  {0x2D, 0, 'e', 0},   {0x67, 0, 'p', 0},   {0x16, 0, '/', 0},
+        {0x07, 0, '7', 0},   {0x08, 0, '8', 0},   {0x09, 0, '9', 0},   {0x17, 0, '*', 0},
+        {0x04, 0, '4', 0},   {0x05, 0, '5', 0},   {0x06, 0, '6', 0},   {0x12, 0, '-', 0},
+        {0x01, 0, '1', 0},   {0x02, 0, '2', 0},   {0x03, 0, '3', 0},   {0x13, 0, '+', 0},
+        {0x0A, 0, '0', 0},   {0x23, 0, '.', 0},   {0x27, 0, 'n', 0},   {0x11, 0, '\n', 0},
+        {0x5E, KEY_ONOFF, 'R', 0},
+        // printer buttons
+        {0x2C, 0, '#', 0}, // PRINT
+        {0x2F, KEY_ONOFF, '?', 0}, // TRACE
+        {0x0C, 0, '@', 0}, // ADVANCE
+
+        {0}
+};
+
+/* XXX todo */
+static const char *key_help_sr51 =
+      "[arc]=a        [sin]=s      [cos]=c      [tan]=t     [C]=Space\n"
+      "[hyp]=h        [D/R]=d      [ln]=l      [exp]=E      [log]=L\n"
+      "[x^2]=x        [sqrt]=S     [1/x]=i      [x!]=!      [xsqrty]=r\n"
+      "[STO]=>        [RCL]=<      [SUM]=&      [xy]=X      [Y^x]=Y\n"
+      "[CE]=Back      [EE]=e       [pi]=p    [/]=/\n"
+	  "[7]=7       [8]=8    [9]=9     [x]=*\n"
+	  "[4]=4       [5]=5    [6]=6     [-]=-\n"
+	  "[1]=1       [2]=2    [3]=3     [+]=+\n"
+	  "[0]=0       [.]=.    [+/-]=n   [=]=Enter\n"
+      "----------\n"
+      "RAD=R\n"
+	  "PRINT=#        TRACE=?        ADVANCE=@\n";
 
 static const struct keymap key_table_sr50[] = {
         /* 50 */
@@ -396,6 +432,10 @@ int key_init(struct chip *chip, const char *name)
     else if (!strcmp(name, "sr51-II")) {
         cpu.keymap = key_table_sr51II;
         printf(key_help_sr51II);
+    }
+    else if (!strcmp(name, "sr51")) {
+        cpu.keymap = key_table_sr51;
+        printf(key_help_sr51);
     }
     else if (!strcmp(name, "sr52")) {
         cpu.keymap = key_table_sr52;
