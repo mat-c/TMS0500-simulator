@@ -155,7 +155,7 @@ static void dis(struct brom_state *bstate)
       for (addr = 0; addr < rom_size; addr ++) {
         DIS("%04X:\t", addr + bstate->start);
         DIS("%04X:\t", bstate->data[addr]);
-        disasm (addr, bstate->data[addr]);
+        disasm (addr + bstate->start, bstate->data[addr]);
         DIS("\n");
       }
     log_file = old_out;
