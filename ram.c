@@ -73,11 +73,12 @@ static int ram_process(void *priv, struct bus *bus)
         }
         if (ram->flags & RAM_WAIT2_CMD) {
             /* get cmd from io bus
-             * for addr > 99, hexa is used on top digit
+             * for addr > 99, hexa is used on digit[3]
              * B0 for 110. This use the fact
-             * that carry is not done on io bus
+             * that carry is not done on io bus.
+             * io[3] is like a chip select (used on SR60)
              */
-            int addr = bus->io[3] * 10 + bus->io[2];
+            int addr = bus->io[4] * 120 + bus->io[3] * 10 + bus->io[2];
             int cmd = bus->io[0];
             if (addr >= ram->start && addr < ram->end) {
                 if (cmd <= 2 || cmd == 4) {
