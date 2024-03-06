@@ -29,9 +29,6 @@
 // ====================================
 // Log control
 // ====================================
-unsigned log_flags = 0;
-
-FILE *log_file;
 #define	LOG_FILE	log_file
 // disassembly output macro
 //#define	DIS(...)	fprintf (LOG_FILE, __VA_ARGS__)
@@ -878,13 +875,6 @@ static int alu_process(void *priv, struct bus *bus)
 
 int alu_init(struct chip *chip)
 {
-    log_file = stdout;
-    log_flags = 7;
-    if (log_flags) {
-        FILE *f = fopen("log.txt", "a");
-        if (f)
-            log_file = f;
-    }
     /* force preg 0 */
     //cpu.KR = 2;
     /* set cond for easy compare with other logs */

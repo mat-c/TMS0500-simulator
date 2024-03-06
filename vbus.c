@@ -25,6 +25,8 @@
 #include "bus.h"
 #include "emu.h"
 
+unsigned log_flags = 0;
+FILE *log_file;
 
 #define CHIPS_NUM_MAX 30
 struct chip chipss[CHIPS_NUM_MAX] = {
@@ -90,6 +92,15 @@ int main(int argc, char *argv[])
     int ram_addr = 0;
     int disasm = 0;
     char *keyb_name = NULL;
+
+    log_file = stdout;
+    //log_flags = 7;
+    if (log_flags) {
+        FILE *f = fopen("log.txt", "a");
+        if (f)
+            log_file = f;
+    }
+
     ret |= alu_init(&chipss[i++]);
     while ((opt = getopt(argc, argv, "r:s:k:Rmdpl:")) != -1) {
         switch (opt) {
