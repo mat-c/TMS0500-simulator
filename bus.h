@@ -18,8 +18,10 @@
  *
  */
 
+#pragma once
 
 #include <stdint.h>
+
 
 struct bus {
 	/* 16 bits from cpu/crom (LSB first on bus S0..S15)
@@ -36,7 +38,7 @@ struct bus {
 	uint16_t ext;
 
 	/*  13 bits instruction (LSB first S3...S15) */
-	#define IRG_BRANCH_MASK 0x10000
+	#define IRG_BRANCH_MASK 0x1000
 	uint16_t irg;
 
     /* IO bus 16 digit (LSB first) */
@@ -64,4 +66,8 @@ struct bus {
     int sstate;
     /* write = 0 : read bus, write = 1 : write bus */
     int write;
+    int idle;
+
+    /* debug */
+    int addr;
 };

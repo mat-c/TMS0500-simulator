@@ -21,6 +21,8 @@
 #include "bus.h"
 #include <stdio.h>
 #include <string.h>
+#include "bus.h"
+#include "emu.h"
 
 
 struct chip {
@@ -31,16 +33,18 @@ struct chip {
 };
 
 
-struct chip chips[] = {
+struct chip chipss[] = {
+    {.process = alu_process, .priv = NULL},
+    {.process = brom_process, .priv = NULL},
+    {.process = NULL},
 };
-int chip_num;
 
 struct bus bus_state;
 
-int run(struct chip *chips, struct bus *bus)
+int run(struct chip chips[], struct bus *bus)
 {
 
-    memset(&bus, 0, sizeof(bus));
+    memset(bus, 0, sizeof(*bus));
     while (1) {
         for (bus->dstate = 15; bus->dstate >= 0; bus->dstate--) {
             bus->ext = 0;
@@ -49,19 +53,28 @@ int run(struct chip *chips, struct bus *bus)
             for (bus->sstate = 0; bus->sstate < 16; bus->sstate++) {
                 int ret;
                 bus->write = 1;
-                for (int i = 0; i < chip_num; i++) {
+                for (int i = 0; chips[i].process; i++) {
                     ret = chips[i].process(chips[i].priv, bus);
                     if (ret)
                         return ret;
                 }
                 bus->write = 0;
-                for (int i = 0; i < chip_num; i++) {
+                for (int i = 0; chips[i].process; i++) {
                     ret = chips[i].process(chips[i].priv, bus);
                     if (ret)
                         return ret;
                 }
             }
+            //DIS("EXT 0x%04x IRG 0x%04x\n", bus->ext, bus->irg);
         }
     }
+    return 0;
+}
+
+int main()
+{
+    alu_init();
+    chipss[1].priv = brom_init();
+    run(chipss, &bus_state);
     return 0;
 }

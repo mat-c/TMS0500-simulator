@@ -22,6 +22,7 @@
 #include <assert.h>
 
 #include "bus.h"
+#include "emu.h"
 
 /**
  *  http://www.datamath.org/Chips/TMC0560.htm
@@ -39,18 +40,12 @@ struct brom_state {
 	uint16_t last_ext;
 	uint16_t last_irg;
 
-	uint16_t *data;
+	uint16_t data[1024];
 	int size;
 };
 
-void brom_init(struct brom_state *bstate, uint16_t *rom, int rom_size)
-{
-	bstate->data = rom;
-	bstate->size = rom_size;
-};
-
-#define BROM_CS 5
-#define PC_ADDR(x) ((x >> 3) & 0x3FF)
+#define BROM_CS 0
+#define PC_ADDR(x) ((x) & 0x3FF)
 
 
 static unsigned int handle_branch(const struct brom_state *bstate, int cond)
@@ -59,7 +54,8 @@ static unsigned int handle_branch(const struct brom_state *bstate, int cond)
 	int boffset = (bstate->last_irg >> 1) & 0x3FF;
 	int bneg = (bstate->last_irg) & 1;
 
-	if (cond == bcond) {
+    //DIS("branch %d %d\n", !!cond, bcond);
+	if (!!cond == bcond) {
 		if (bneg)
 			boffset = -boffset;
 		return bstate->pc + boffset;
@@ -98,6 +94,7 @@ static void brom_process_out(struct brom_state *bstate, struct bus *bus_state)
      */
     else if (bstate->last_ext & EXT_PREG) {
         bstate->pc = bstate->last_ext >> 3;
+        //DIS("PREG 0x%04x\n", bstate->last_ext);
     }
     /* check branch instruction to update address */
     else if (bstate->last_irg & IRG_BRANCH_MASK) {
@@ -108,6 +105,7 @@ static void brom_process_out(struct brom_state *bstate, struct bus *bus_state)
     }
 
 
+    //DIS("addr %d last_irg 0x%04x\n", bstate->pc, bstate->last_irg);
     unsigned int addr = PC_ADDR(bstate->pc);
     /* output instruction if selected */
     if ((bstate->pc >> 10) == BROM_CS && addr < bstate->size) {
@@ -116,6 +114,8 @@ static void brom_process_out(struct brom_state *bstate, struct bus *bus_state)
          */
         assert(bus_state->irg == 0);
         bus_state->irg = bstate->data[addr];
+        bus_state->addr = addr;
+        //DIS("addr%d new irg%04x\n", addr, bus_state->irg);
     }
 }
 
@@ -138,4 +138,18 @@ int brom_process(void *priv, struct bus *bus_state)
         brom_process_in(bstate, bus_state);
 
     return 0;
+}
+
+void *brom_init(void)
+{
+    struct brom_state *bstate = malloc(sizeof(struct brom_state));
+    int ret;
+    if (!bstate)
+        return NULL;
+    bstate->last_ext = 0;
+    bstate->last_irg = 0;
+    ret = load_dump(bstate->data, sizeof(bstate->data), "rom-SR50/TMC0521B.txt");
+	bstate->size = ret;
+    printf("rom size %d\n", ret);
+    return bstate;
 }
