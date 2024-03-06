@@ -224,6 +224,13 @@ int scom_init(struct chip *chip, const char *name)
         free(scom);
         return -1;
     }
+    if (size < 16) {
+        printf("const too small\n");
+        free(scom);
+        return -1;
+    }
+    /* default value to register */
+    memset(scom->SCOM, 0xC, sizeof(scom->SCOM));
 
     chip->priv = scom;
     if (size > 16) {
