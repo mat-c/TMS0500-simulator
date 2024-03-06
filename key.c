@@ -18,6 +18,8 @@
  *
  */
 
+//#define KEEP_RUN
+
 #include <time.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -78,9 +80,9 @@ static const struct keymap key_table_ti58[] = {
         {0}
 };
 
-static const char *key_help_ti58 = 
-      "[A]=A       [B]=B        [C]=C      [D]=D       [E]=E\n"
-	  "[2nd]=Esc      [INV]=I      [ln\\log]=l  [CE\\CP]=Back [CLR]=Space\n"
+static const char *key_help_ti58 =
+      "[A]=A         [B]=B         [C]=C       [D]=D        [E]=E\n"
+	  "[2nd]=Esc     [INV]=I       [ln\\log]=l  [CE\\CP]=Back [CLR]=Space\n"
 	  "[LRN\\Pgm]=p   [x<>t\\P->R]=x [x^2\\sin]=s [sqrt\\cos]=c [1/x\\tan]=t\n"
 	  "[SST\\Ins]=i   [STO\\CMs]=>   [RCL\\Exc]=< [SUM\\Prd]=&  [Y^x\\Ind]=y\n"
 	  "[BST\\Del]=d   [EE\\Eng]=e    [(\\Fix]=(   [)\\Int]=)    [/\\|x|]=/\n"
@@ -104,7 +106,7 @@ static const struct keymap key_table_sr52[] = {
 
         {0}
 };
-static const char *key_help_sr52 = 
+static const char *key_help_sr52 =
       "[A]=A          [B]=B          [C]=C         [D]=D         [E]=E\n"
 	  "[2nd]=Esc      [INV]=I        [ln\\log]=l   [CE\\x!]=Back [CLR\\1/x]=Space\n"
       "[LRN\\IND]=p    [sin\\D.MS]=s   [cos\\D/R]=c  [tan\\P/R]=t  [xsqrty\\sqrt]=S\n"
@@ -132,7 +134,7 @@ static const struct keymap key_table_sr56[] = {
 
         {0}
 };
-static const char *key_help_sr56 = 
+static const char *key_help_sr56 =
       "[2nd]=Esc      [INV]=I       [ln\\log]=l   [e^x\\10^x]=E [CLR]=Space\n"
       "[LRN\\f(n)]=p  [GTO\\???]=g  [sin\\???]=s  [cos\\Int]=c  [tan\\1/x]=t\n"
       "[SST\\BST]=i   [x<>t\\??]=X  [STO\\CMs]=>  [RCL\\Exc]=<  [SUM\\Prd]=&\n"
@@ -144,6 +146,30 @@ static const char *key_help_sr56 =
 	  "[0/S.Dev.]=0   [./ptr]=.   [+/-/pap]=n [=/list]=Enter\n"
       "----------\n"
       "RAD=R\n";
+
+static const struct keymap key_table_sr51II[] = {
+        {0x15, 0, 0x1B, 0},  {0x25, 0, 's', 0},  {0x35, 0, 'c', 0},    {0x55, 0, 't', 0}, {0x65, 0, ' ', 0},
+        {0x17, 0, 'I', 0}, 	 {0x27, 0, '%', 0},  {0x37, 0, 'l', 0},    {0x57, 0, 'E', 0},  {0x67, 0, 'r', 0},
+        {0x13, 0, 'X', 0},   {0x23, 0, 'x', 0},  {0x33, 0, 'S', 0},    {0x53, 0, 'i', 0},  {0x63, 0, 'y', 0},
+        {0x14, 0, 'U', 0},   {0x24, 0, 'e', 0},  {0x34, 0, '(', 0},   {0x54, 0, ')', 0},   {0x64, 0, '/', 0},
+        {0x12, 0, '>', 0},   {0x22, 0, '7', 0},   {0x32, 0, '8', 0},   {0x52, 0, '9', 0},    {0x62, 0, '*', 0},
+        {0x11, 0, '<', 0},   {0x21, 0, '4', 0},   {0x31, 0, '5', 0},   {0x51, 0, '6', 0},    {0x61, 0, '-', 0},
+        {0x18, 0, '&', 0},   {0x28, 0, '1', 0},   {0x38, 0, '2', 0},   {0x58, 0, '3', 0},    {0x68, 0, '+', 0},
+        {0x16, 0, 0x7F, 0},  {0x26, 0, '0', 0},   {0x36, 0, '.', 0},   {0x56, 0, 'n', 0},    {0x66, 0, '\n', 0},
+
+        {0}
+};
+static const char *key_help_sr51II =
+	  "[2nd]=Esc      [sin\\sinh]=s        [cos\\cosh]=c   [tan\\tanh]=t [CLR\\CA]=Space\n"
+	  "[INV]=I        [%%\\D%%]=%%       [ln\\log]=l    [e^x\\10^x]=E  [xsqrty\\x!]=r\n"
+      "[xy]=X         [x^2\\MEAN]=x      [sqrt\\S.DEV]=S [1/x\\VAR]=i [Y^x\\CORR]=y\n"
+      "[SUM+\\SUM-]=U  [EE\\Eng]=e  [(\\const]=(    [)\\pi]=)     [/\\Slope]=/\n"
+      "[STO\\Fix]=>   [7]=7          [8]=8        [9]=9        [x\\Intcp]=*\n"
+	  "[RCL\\EXC]=<    [4]=4          [5]=5        [6]=6        [-\\x']=-\n"
+	  "[SUM\\Prd]=&   [1]=1          [2]=2        [3]=3        [+\\y']=+\n"
+	  "[CE]=Back     [0]=0     [.]=.    [+/-]=n  [=]=Enter\n";
+
+
 
 static const struct keymap key_table_sr50[] = {
         /* 50 */
@@ -164,7 +190,7 @@ static const struct keymap key_table_sr50[] = {
         {0}
 };
 
-static const char *key_help_sr50 = 
+static const char *key_help_sr50 =
       "[arc]=a        [sin]=s      [cos]=c      [tan]=t     [C]=Space\n"
       "[hyp]=h        [D/R]=d      [ln]=l      [exp]=E      [log]=L\n"
       "[x^2]=x        [sqrt]=S     [1/x]=i      [x!]=!      [xsqrty]=r\n"
@@ -198,6 +224,7 @@ static void Sleep(unsigned long long delay)
  * SR50 : 2 scan with key press, 1(2*) scan no key (* if cond is unset, there will be one more no key loop)
  * SR50.1 : 2 scan with key press, 2(3*) scan no key
  * SR50A : 2 scan with key press, 2(3*) scan no key
+ * SR51-II : 2 scan with key press, 3(4*?) scan no key
  *
  * */
 static int key_read2(int idle)
@@ -221,9 +248,11 @@ static int key_read2(int idle)
         return 0;
     }
     int ret = read(0, &AsciiChar, 1);
+#ifndef KEEP_RUN
     if (ret != 1) {
         return -1;
     }
+#endif
     for (size = 0; cpu.keymap[size].ascii; size++) {
         if (cpu.keymap[size].ascii && cpu.keymap[size].ascii == AsciiChar) {
             if (log_flags & LOG_DEBUG)
@@ -313,10 +342,8 @@ static void key_init2(void)
     //new_settings.c_lflag &= (~ISIG); // don't automatically handle control-C
 
 #ifdef KEEP_RUN
-    /* non blocking
     new_settings.c_cc[VTIME] = 0; // timeout (tenths of a second)
     new_settings.c_cc[VMIN] = 0; // minimum number of characters
-    */
     cpu.keyboardidle = 0;
 #else
     new_settings.c_cc[VTIME] = 10; // timeout (tenths of a second)
@@ -338,8 +365,19 @@ int key_init(struct chip *chip, const char *name)
 
     printf("keymap %s\n", name);
     if (!strcmp(name, "ti58")) {
+        cpu.key[7] |= (1 << KR_BIT);
         cpu.keymap = key_table_ti58;
         printf(key_help_ti58);
+    }
+    else if (!strcmp(name, "ti59")) {
+        /* close card reader */
+        cpu.key[10] |= (1 << KR_BIT);
+        cpu.keymap = key_table_ti58;
+        printf(key_help_ti58);
+    }
+    else if (!strcmp(name, "sr51-II")) {
+        cpu.keymap = key_table_sr51II;
+        printf(key_help_sr51II);
     }
     else if (!strcmp(name, "sr52")) {
         cpu.keymap = key_table_sr52;
