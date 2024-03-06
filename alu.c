@@ -751,7 +751,7 @@ static void alu_gen_digit(struct bus *bus)
     }
 }
 
-int alu_process(void *priv, struct bus *bus)
+static int alu_process(void *priv, struct bus *bus)
 {
     cpu.digit = bus->dstate;
     cpu.EXT = bus->ext;
@@ -864,7 +864,7 @@ int alu_process(void *priv, struct bus *bus)
     return 0;
 }
 
-void alu_init(void)
+int alu_init(struct chip *chip)
 {
     log_file = stdout;
     log_flags = 7;
@@ -889,4 +889,7 @@ void alu_init(void)
     cpu.R5 = 0xE;
     cpu.reset = 5;
 
+    chip->process = alu_process;
+    printf("alu init\n");
+    return 0;
 }

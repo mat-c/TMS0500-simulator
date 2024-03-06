@@ -95,7 +95,7 @@ static void brom_process_out(struct brom_state *bstate, struct bus *bus_state)
      */
     else if (bstate->last_ext & EXT_PREG) {
         bstate->pc = bstate->last_ext >> 3;
-        //DIS("PREG 0x%04x\n", bstate->last_ext);
+        //LOG("PREG 0x%04x\n", bstate->last_ext);
     }
     /* check branch instruction to update address */
     else if (bstate->last_irg & IRG_BRANCH_MASK) {
@@ -134,7 +134,7 @@ static void brom_process_in(struct brom_state *bstate, struct bus *bus_state)
     }
 }
 
-int brom_process(void *priv, struct bus *bus_state)
+static int brom_process(void *priv, struct bus *bus_state)
 {
     struct brom_state *bstate = priv;
     if (bus_state->write)
@@ -145,23 +145,31 @@ int brom_process(void *priv, struct bus *bus_state)
     return 0;
 }
 
-void *brom_init(const char *name)
+int brom_init(struct chip *chip, const char *name)
 {
     struct brom_state *bstate = malloc(sizeof(struct brom_state));
     int size;
     int base;
     if (!bstate)
-        return NULL;
+        return -1;
     bstate->last_ext = 0;
     bstate->last_irg = 0;
     bstate->pc = 1<<16;
 
     size = load_dump(bstate->data, sizeof(bstate->data), name, &base);
+    printf("rom '%s'  base %d size %d\n",
+            name, base, size);
+
+    if (size > sizeof(bstate->data)) {
+        printf("rom too big\n");
+        free(bstate);
+        return -1;
+    }
     //ret = load_dump(bstate->data, sizeof(bstate->data), "rom-SR50r1/TMC0521E.txt");
     //ret = load_dump(bstate->data, sizeof(bstate->data), "rom-SR50A/TMC0531A.txt");
 	bstate->end = base + size;
     bstate->start = base;
-    printf("rom '%s'  base %d size %d\n",
-            name, base, size);
-    return bstate;
+    chip->priv = bstate;
+    chip->process = brom_process;
+    return 0;
 }

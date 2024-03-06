@@ -74,25 +74,40 @@ int load_dump (unsigned short *buf, int buf_len, const char *name, int *base) {
     return rom_size;
 }
 
-int load_dump8 (unsigned char buf[][16], int buf_len, const char *name) {
+int load_dumpK (unsigned char buf[][16], int buf_len, const char *name, int *base) {
     int rom_size = 0;
+    int base_addr = -1;
     FILE *f;
 #define	LINELEN	1024
     char line[LINELEN];
+    if (!base)
+        return 0;
     if ((f = fopen (name, "rt")) == NULL)
-        return 1;
+        return 0;
     while (!feof (f)) {
-        unsigned addr, idx = 0;
+        int addr, idx = 0;
         uint64_t data;
         if (!fgets (line, LINELEN, f))
             break;
+        if (!isdigit(line[0]) || !isdigit(line[1]) ||
+            !isdigit(line[2]) || line[3] != ':')
+            continue;
+
         if (!sscanf (line, "%d: ", &addr))
             continue;
+        if (base_addr == -1)
+            base_addr = addr;
+        if (addr >= base_addr)
+            addr -= base_addr;
+        else {
+            fprintf (stderr, "load %s: address 0x%X out of range\n", name, addr);
+            continue;
+        }
+
         while (line[idx] > ' ') idx++;
         while (line[idx] && line[idx] <= ' ') idx++;
         while (sscanf (line+idx, "%lX", &data) > 0) {
             if (addr < buf_len) {
-                printf("%x:%lx\n", addr, data);
                 for (int j = 0; j < 16; j++) {
                     buf[addr][j] = data & 0xf;
                     data >>= 4;
@@ -108,6 +123,7 @@ int load_dump8 (unsigned char buf[][16], int buf_len, const char *name) {
         }
     }
     fclose (f);
+    *base = base_addr;
     return rom_size;
 }
 

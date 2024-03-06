@@ -25,21 +25,12 @@
 #include "emu.h"
 
 
-struct chip {
-    void *(*init)(int cs);
-    int (*process)(void *priv, struct bus *bus);
-    void *priv;
-    int (*dump_state)(void *priv, struct bus *bus, FILE *f);
-};
-
-
 struct chip chipss[] = {
-    {.process = alu_process, .priv = NULL},
-    {.process = brom_process, .priv = NULL},
+    {.process = NULL, .priv = NULL},
+    {.process = NULL, .priv = NULL},
+    {.process = NULL, .priv = NULL},
     {.process = display_process, .priv = NULL},
     {.process = key_process, .priv = NULL},
-    {.process = scom_reg_process, .priv = NULL},
-    {.process = scom_const_process, .priv = NULL},
     {.process = NULL},
 };
 
@@ -84,10 +75,12 @@ int run(struct chip chips[], struct bus *bus)
 
 int main()
 {
-    alu_init();
-    chipss[1].priv = brom_init("rom-SR50/TMC0521B.txt");
+    int i = 0;
+    int ret = 0;
+    ret |= alu_init(&chipss[i++]);
+    ret |= brom_init(&chipss[i++], "rom-SR50/TMC0521B.txt");
+    ret |= scom_const_init(&chipss[i++], "rom-SR50/TMC0521B-CONST.txt");
     key_init();
-    scom_const_init();
     run(chipss, &bus_state);
     return 0;
 }

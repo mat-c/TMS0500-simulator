@@ -26,6 +26,12 @@
 #define SR50
 #define TEST_MODE
 
+struct chip {
+    int (*process)(void *priv, struct bus *bus);
+    void *priv;
+    int (*dump_state)(void *priv, struct bus *bus, FILE *f);
+};
+
 
 // ====================================
 // Log control
@@ -42,23 +48,17 @@ extern unsigned log_flags;
 void disasm (unsigned addr, unsigned opcode);
 
 
-int alu_process(void *priv, struct bus *bus);
-void alu_init(void);
+int alu_init(struct chip *chip);
 
 
-int brom_process(void *priv, struct bus *bus);
-void *brom_init(const char *name);
+int brom_init(struct chip *chip, const char *name);
 
 int load_dump (unsigned short *buf, int buf_len, const char *name, int *base);
-int load_dump8 (unsigned char buf[][16], int buf_len, const char *name);
+int load_dumpK (unsigned char buf[][16], int buf_len, const char *name, int *base);
 
 
 char *display_debug(void);
 int display_process(void *priv, struct bus *bus);
 int key_process(void *priv, struct bus *bus);
 
-int scom_reg_process(void *priv, struct bus *bus);
-
-
-int scom_const_process(void *priv, struct bus *bus);
-void *scom_const_init(void);
+int scom_const_init(struct chip *chip, const char *name);
