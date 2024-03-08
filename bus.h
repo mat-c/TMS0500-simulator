@@ -59,7 +59,7 @@ struct bus {
     #define KT_BIT  6
     uint8_t key_line;
 
-    /* D15 to D0 */
+    /* D15 to D0 : on real hardware not shared */
     int dstate;
 
     /* S0 to S15 */
@@ -68,6 +68,8 @@ struct bus {
     int write;
     int idle;
 
-    /* debug */
+    /* for debug. current address of irg. set to
+     * -1 to detect missing instruction.
+     */
     int addr;
 };
