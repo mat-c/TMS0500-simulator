@@ -55,6 +55,10 @@ wget $URL/TMC0524B-CONST.txt
 wget $URL/TMC0524B.txt
 wget $URL/TMC0562C.txt
 wget $URL/TMC0563B.txt
+
+#A variant
+wget $URL/TMC0534B-CONST.txt
+wget $URL/TMC0534B.txt
 cd -
 
 mkdir rom-SR56
