@@ -747,16 +747,20 @@ static void alu_gen_digit(struct bus *bus)
         if (cpu.R5 == i)
             bus->display_dpt = 1;
         //XXX
-        //It is also output when !idle at Srate
         //D15 is wrong, but not really used
         if (cpu.fA & (1<<(i+1)))
             bus->display_segH = 1;
 #endif
     }
     else {
+#if 0
         /* output at Srate */
         if (cpu.fA)
             bus->display_segH = 1;
+#else
+        /* limit display refresh */
+        bus->display_segH = 1;
+#endif
     }
 }
 
