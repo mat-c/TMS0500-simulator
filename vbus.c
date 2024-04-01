@@ -78,6 +78,12 @@ int run(struct chip chips[], struct bus *bus)
     return 0;
 }
 
+static void exitcb(void)
+{
+    fflush(log_file);
+    printf("exit\n");
+}
+
 static void help(void)
 {
     printf("-r: rom file\n");
@@ -94,8 +100,9 @@ int main(int argc, char *argv[])
     enum hw hw_opt;
     char *keyb_name = NULL;
 
+    atexit(exitcb);
     log_file = stdout;
-    //log_flags = 7;
+    log_flags = 7;
     if (log_flags) {
         FILE *f = fopen("log.txt", "a");
         if (f)
