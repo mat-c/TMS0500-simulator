@@ -141,7 +141,7 @@ void display_dbgprint(const char *line)
 
 int display_init(struct chip *chip, const char *name)
 {
-    if (name && (!strcmp(name, "ti58") ||
+    if (name && (!strcmp(name, "ti58") || !strcmp(name, "ti58c") ||
             !strcmp(name, "ti59") || !strcmp(name, "sr51-II"))) {
         chip->process = display_process2;
         printf("new display\n");

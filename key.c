@@ -45,6 +45,16 @@ static struct {
 
   unsigned char key_code;
   int key_count;
+  unsigned char key_coder;
+  int key_countr;
+
+
+  int key_press_cycle;
+  int key_unpress_cycle;
+  unsigned int key_press_mask;
+  unsigned int key_unpress_mask;
+
+
   int keyboardidle;
 
   // CPU cycle counter (used to simulate real CPU frequency)
@@ -245,7 +255,8 @@ static const char *key_help_sr50 =
       "----------\n"
       "RAD=R\n";
 
-static struct termios new_settings, stored_settings;
+static struct termios new_settings, new_settings_scan;
+static struct termios stored_settings;
 
 static unsigned long long GetTickCount (void)
 {
@@ -266,37 +277,30 @@ static void Sleep(unsigned long long delay)
  * SR50 : 2 scan with key press, 1(2*) scan no key (* if cond is unset, there will be one more no key loop)
  * SR50.1 : 2 scan with key press, 2(3*) scan no key
  * SR50A : 2 scan with key press, 2(3*) scan no key
+ * SR51 : 1 scan with key press, 2(3*) scan no key
  * SR51-II : 2 scan with key press, 3(4*?) scan no key
+ * SR52/56 ti5x : 2 scan with key press, 2(3*) scan no key
  *
  * */
-static int key_read2(struct bus *bus)
+static int key_read2(struct bus *bus, int scan_all_press)
 {
 
     unsigned char AsciiChar = 0;
     int size;
-    int idle = bus->idle;
-    if (cpu.keyboardidle && !idle)
-        return 0;
 
-    if (cpu.key_count >= -1) {
-        /* 2 repeat key
-         * 1 remove key & no key
-         * 0 no key
-         * -1 no key
-         */
-        LOG("key count %d", cpu.key_count);
-        //if (cpu.key_count > 1 && bus->dstate == (cpu.key_code & 0x0F))
-        //    bus->key_line |= 1 << ((cpu.key_code >> 4) & 0x07);
-        if (cpu.key_count <= 1)
-            cpu.key_count--;
-        return 0;
+    if (!scan_all_press) {
+        tcsetattr(0, TCSANOW, &new_settings);
+        int ret = read(0, &AsciiChar, 1);
+        tcsetattr(0, TCSANOW, &new_settings_scan);
+        if (ret == 0)
+            return 0;
     }
-    int ret = read(0, &AsciiChar, 1);
-#ifndef KEEP_RUN
-    if (ret != 1) {
-        return -1;
+    else {
+        int ret = read(0, &AsciiChar, 1);
+        if (ret != 1) {
+            return -1;
+        }
     }
-#endif
     for (size = 0; cpu.keymap[size].ascii; size++) {
         if (cpu.keymap[size].ascii && cpu.keymap[size].ascii == AsciiChar) {
             if (log_flags & LOG_DEBUG)
@@ -304,8 +308,14 @@ static int key_read2(struct bus *bus)
             LOG("r.1=%c", AsciiChar);
             if (!(cpu.keymap[size].flags & KEY_ONOFF)) {
                 //cpu.key[cpu.keymap[size].key_code & 0x0F] |= 1 << ((cpu.keymap[size].key_code >> 4) & 0x07);
-                cpu.key_code = cpu.keymap[size].key_code;
-                cpu.key_count = 3;
+                if (!scan_all_press) {
+                    cpu.key_coder = cpu.keymap[size].key_code;
+                    cpu.key_countr = cpu.key_press_cycle * 10;
+                }
+                else {
+                    cpu.key_code = cpu.keymap[size].key_code;
+                    cpu.key_count = cpu.key_press_cycle;
+                }
             }
             else {
                 /* only revert key state */
@@ -338,13 +348,58 @@ static int key_process(void *priv, struct bus *bus)
      * at state S0 (for hold reason)
      */
     if (bus->sstate == 15 && !bus->write) {
-        if ((bus->irg & 0xFF08) == 0x0800 && !(bus->ext & EXT_HOLD)) {
-            if (key_read2(bus) < 0)
-                return -1;
+        if (bus->idle) {
+            cpu.key_countr = 0;
+            cpu.key_coder = 0;
         }
-        if (bus->dstate == (cpu.key_code & 0x0F) && cpu.key_count > 1) {
+        else if (cpu.key_count > 0) {
+            cpu.key_count = 0;
+            cpu.key_code = 0;
+        }
+
+        if (!(bus->ext & EXT_HOLD) && (bus->irg & 0xFF00) == 0x0800) {
+            /* keyboard instruction */
+            int scan_all_press = (bus->irg & 0xFF) == cpu.key_press_mask;
+            int scan_all_unpress = (bus->irg & 0xFF) == cpu.key_unpress_mask;
+            if (!bus->idle) {
+                int scan = !(bus->irg & 8);
+                /* only scan=0 */
+                if (!scan && bus->dstate < 13 && bus->dstate > 0 ) {
+                    if (cpu.key_countr <= 0) {
+                        if (key_read2(bus, 0) < 0)
+                            return -1;
+                    }
+                    else
+                        cpu.key_countr--;
+                    LOG("key read %d scan=%d idle=%d ", cpu.key_countr, scan, bus->idle);
+                }
+            }
+            else if (scan_all_press && cpu.key_count > 1) {
+                /* repeat key */
+                cpu.key_count--;
+                LOG("key repeat %d idle=%d addr=0x%x ", cpu.key_count, bus->idle, bus->addr);
+            }
+            else if (scan_all_unpress &&
+                    cpu.key_count > -cpu.key_unpress_cycle) {
+                /* force no key  */
+                cpu.key_code = 0;
+                cpu.key_count--;
+                LOG("key empty %d idle=%d addr=0x%x ", cpu.key_count, bus->idle, bus->addr);
+            }
+            else if (scan_all_press && cpu.key_code == 0) {
+                if (key_read2(bus, 1) < 0)
+                    return -1;
+                LOG("key read %d code=%x addr=0x%x ", cpu.key_count, cpu.key_code, bus->addr);
+            }
+        }
+
+        if (bus->dstate == (cpu.key_code & 0x0F) && cpu.key_count > 0) {
+            /* key_count = 2 and 1 */
             bus->key_line |= 1 << ((cpu.key_code >> 4) & 0x07);
-            cpu.key_count--;
+        }
+        if (bus->dstate == (cpu.key_coder & 0x0F) && cpu.key_countr > 0) {
+            /* key_count = 2 and 1 */
+            bus->key_line |= 1 << ((cpu.key_coder >> 4) & 0x07);
         }
 
         bus->key_line |= cpu.key[bus->dstate];
@@ -391,18 +446,15 @@ static void key_init2(void)
     new_settings.c_lflag &= (~ECHO); // don't echo the character
     //new_settings.c_lflag &= (~ISIG); // don't automatically handle control-C
 
-#ifdef KEEP_RUN
     new_settings.c_cc[VTIME] = 0; // timeout (tenths of a second)
     new_settings.c_cc[VMIN] = 0; // minimum number of characters
-    cpu.keyboardidle = 0;
-#else
-    new_settings.c_cc[VTIME] = 10; // timeout (tenths of a second)
-    new_settings.c_cc[VMIN] = 1; // minimum number of characters
-    cpu.keyboardidle = 1;
-#endif
+
+    new_settings_scan = new_settings;
+    new_settings_scan.c_cc[VTIME] = 10; // timeout (tenths of a second)
+    new_settings_scan.c_cc[VMIN] = 1; // minimum number of characters
 
     // apply the new settings
-    tcsetattr(0, TCSANOW, &new_settings);
+    tcsetattr(0, TCSANOW, &new_settings_scan);
 
 }
 
@@ -416,7 +468,22 @@ int key_init(struct chip *chip, const char *name)
     chip->process = key_process;
 
     printf("keymap %s\n", name);
-    if (!strcmp(name, "ti58")) {
+    cpu.key_unpress_cycle = 3;
+    cpu.key_press_cycle = 2;
+    cpu.key_press_mask = 0x20;
+    cpu.key_unpress_mask = 0x20;
+    cpu.key_count = 1;
+    cpu.key_code = 1;
+
+    if (!strcmp(name, "ti58c")) {
+        cpu.key_unpress_mask = 0x24;
+        /* if unset, enable card reader code
+         */
+        cpu.key[7] |= (1 << KR_BIT);
+        cpu.keymap = key_table_ti58;
+        printf(key_help_ti58);
+    }
+    else if (!strcmp(name, "ti58")) {
         /* if unset, enable card reader code
          */
         cpu.key[7] |= (1 << KR_BIT);
@@ -434,6 +501,7 @@ int key_init(struct chip *chip, const char *name)
         printf(key_help_sr51II);
     }
     else if (!strcmp(name, "sr51")) {
+        cpu.key_press_cycle = 1;
         cpu.keymap = key_table_sr51;
         printf(key_help_sr51);
     }
