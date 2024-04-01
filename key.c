@@ -459,7 +459,7 @@ static void key_init2(void)
 }
 
 
-int key_init(struct chip *chip, const char *name)
+int key_init(struct chip *chip, const char *name, enum hw hw_opt)
 {
     if (!name)
         name = "sr50";
@@ -482,6 +482,9 @@ int key_init(struct chip *chip, const char *name)
         cpu.key[7] |= (1 << KR_BIT);
         cpu.keymap = key_table_ti58;
         printf(key_help_ti58);
+        /* printer detection */
+        if (hw_opt & HW_PRINTER)
+            cpu.key[10] |= (1 << KP_BIT);
     }
     else if (!strcmp(name, "ti58")) {
         /* if unset, enable card reader code
@@ -489,12 +492,18 @@ int key_init(struct chip *chip, const char *name)
         cpu.key[7] |= (1 << KR_BIT);
         cpu.keymap = key_table_ti58;
         printf(key_help_ti58);
+        /* printer detection */
+        if (hw_opt & HW_PRINTER)
+            cpu.key[0] |= (1 << KP_BIT);
     }
     else if (!strcmp(name, "ti59")) {
         /* close card reader */
         cpu.key[10] |= (1 << KR_BIT);
         cpu.keymap = key_table_ti58;
         printf(key_help_ti58);
+        /* printer detection */
+        if (hw_opt & HW_PRINTER)
+            cpu.key[0] |= (1 << KP_BIT);
     }
     else if (!strcmp(name, "sr51-II")) {
         cpu.keymap = key_table_sr51II;
@@ -504,14 +513,21 @@ int key_init(struct chip *chip, const char *name)
         cpu.key_press_cycle = 1;
         cpu.keymap = key_table_sr51;
         printf(key_help_sr51);
+        /* no printer detection on sr51 */
     }
     else if (!strcmp(name, "sr52")) {
         cpu.keymap = key_table_sr52;
         printf(key_help_sr52);
+        /* printer detection */
+        if (hw_opt & HW_PRINTER)
+            cpu.key[0] |= (1 << KP_BIT);
     }
     else if (!strcmp(name, "sr56")) {
         cpu.keymap = key_table_sr56;
         printf(key_help_sr56);
+        /* printer detection */
+        if (hw_opt & HW_PRINTER)
+            cpu.key[0] |= (1 << KP_BIT);
     }
     else {
         cpu.keymap = key_table_sr50;

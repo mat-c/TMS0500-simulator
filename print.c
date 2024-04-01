@@ -184,9 +184,6 @@ static int print_process(void *priv, struct bus *bus)
                 /* advance half line */
                 break;
         }
-        /* indicate printer presence */
-        if (bus->dstate == 0)
-            bus->key_line |= (1 << KP_BIT);
     }
     return 0;
 }

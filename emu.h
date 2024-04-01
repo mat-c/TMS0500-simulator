@@ -45,6 +45,12 @@ extern unsigned log_flags;
 #define	DIS(...)	fprintf (log_file, __VA_ARGS__)
 #define	LOG(...)	do { if (log_flags & LOG_SHORT) fprintf (log_file, __VA_ARGS__); } while (0)
 
+/* hw options */
+enum hw {
+    HW_PRINTER = 1,
+    HW_CDR = 2,
+};
+
 void disasm (unsigned addr, unsigned opcode);
 
 
@@ -61,7 +67,7 @@ int load_dump8 (unsigned char *buf, int buf_len, const char *name);
 int display_init(struct chip *chip, const char *name);
 void display_print(const char *line);
 void display_dbgprint(const char *line);
-int key_init(struct chip *chip, const char *name);
+int key_init(struct chip *chip, const char *name, enum hw hw_opt);
 
 int scom_init(struct chip *chip, const char *name);
 int ram_init(struct chip *chip, int addr);

@@ -91,6 +91,7 @@ int main(int argc, char *argv[])
     int ret = 0;
     int ram_addr = 0;
     int disasm = 0;
+    enum hw hw_opt;
     char *keyb_name = NULL;
 
     log_file = stdout;
@@ -121,6 +122,7 @@ int main(int argc, char *argv[])
             break;
         case 'p':
             ret |= printer_init(&chipss[i++]);
+            hw_opt = HW_PRINTER;
             break;
         case 'l':
             ret |= lib_init(&chipss[i++], optarg);
@@ -146,7 +148,7 @@ int main(int argc, char *argv[])
         return 2;
 
     ret |= display_init(&chipss[i++], keyb_name);
-    ret |= key_init(&chipss[i++], keyb_name);
+    ret |= key_init(&chipss[i++], keyb_name, hw_opt);
     run(chipss, &bus_state);
     return 0;
 }
