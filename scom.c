@@ -137,6 +137,13 @@ static int scom_reg_process(struct scom *scom, struct bus *bus)
                 scom->fifo_reg |= ((addr << 5) | (bus->irg & 0x1F)) << 16; /* 2 cycles delay */
             }
         }
+        else if (bus->irg == 0x0A09) {
+            /* set idle, sync D counter
+             * should exec at D14
+             */
+            if (bus->dstate != 14)
+                LOG(" invalid D sync");
+        }
     }
     return 0;
 }
@@ -169,6 +176,13 @@ static int scom2_reg_process(struct scom *scom, struct bus *bus)
                 addr -= scom->start_reg;
                 scom->fifo_reg |= ((addr << 5) | (bus->irg & 0x1F)) << 16; /* 2 cycles delay */
             }
+        }
+        else if (bus->irg == 0x0A09) {
+            /* set idle, sync D counter,
+             * should exec at D0
+             */
+            if (bus->dstate != 0)
+                LOG(" invalid D sync");
         }
     }
     return 0;
