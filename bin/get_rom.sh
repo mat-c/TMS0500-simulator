@@ -88,3 +88,8 @@ cd rom-SR51-II
 wget $URL/TMC0581-CONST.txt
 wget $URL/TMC0581.txt
 cd -
+
+mkdir module-lib
+cd module-lib
+wget $URL/TMC0541.txt
+cd -
