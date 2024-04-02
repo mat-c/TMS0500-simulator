@@ -35,6 +35,7 @@ int load_dump (unsigned short *buf, int buf_len, const char *name, int *base) {
     char line[LINELEN];
     if (!base)
         return 0;
+    *base = -1;
     if ((f = fopen (name, "rt")) == NULL)
         return 0;
     while (!feof (f)) {
@@ -83,6 +84,7 @@ int load_dumpK (unsigned char buf[][16], int buf_len, const char *name, int *bas
     char line[LINELEN];
     if (!base)
         return 0;
+    *base = -1;
     if ((f = fopen (name, "rt")) == NULL)
         return 0;
     while (!feof (f)) {

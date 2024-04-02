@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
     int disasm_crom = 0;
     enum hw hw_opt;
     char *keyb_name = NULL;
-    const char *options = "r:s:k:Rmpl:dDv:";
+    const char *options = "r:s:k:RmpPl:dDv:";
 
     /* first pass for debug options */
     while ((opt = getopt(argc, argv, options)) != -1) {
@@ -148,8 +148,12 @@ int main(int argc, char *argv[])
             ret |= ram2_init(&chipss[i++], ram_addr++);
             break;
         case 'p':
-            ret |= printer_init(&chipss[i++]);
+            ret |= printer_init(&chipss[i++], TMC0251);
             hw_opt = HW_PRINTER;
+            break;
+        case 'P':
+            ret |= printer_init(&chipss[i++], TMC0253);
+            ret |= printer_init(&chipss[i++], TMC0254);
             break;
         case 'l':
             ret |= lib_init(&chipss[i++], optarg, disasm_crom);
@@ -163,7 +167,7 @@ int main(int argc, char *argv[])
             help();
             ret = 1;
         }
-        if (ret || i == CHIPS_NUM_MAX)
+        if (ret || i >= CHIPS_NUM_MAX - 1)
             break;
     }
     if (ret)
@@ -178,6 +182,8 @@ int main(int argc, char *argv[])
 
     ret |= display_init(&chipss[i++], keyb_name);
     ret |= key_init(&chipss[i++], keyb_name, hw_opt);
+
+    printf("number of chip %d\n", i);
     run(chipss, &bus_state);
     return 0;
 }

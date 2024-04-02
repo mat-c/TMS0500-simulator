@@ -261,18 +261,21 @@ void disasm (unsigned addr, unsigned opcode) {
               if (wait_arg <= 1)
                 DIS ("MOV\tR5,f%c[1..4]", 'A' + wait_arg);
               else if (wait_arg == 7) {
-                DIS ("RAM2_W");
+                DIS ("PRT2_FUNC/RAM2_W");
                 check_flags &= ~FLAG_IO_WRITE_PREV;
                 new_check_flags |= FLG_IOW_EXPECTED;
               }
               else if (wait_arg == 9) {
-                DIS ("PRT2_STEP\t;????");
+                DIS ("PRT2_STEP");
               }
               else if (wait_arg == 0xA) {
-                DIS ("PRT2\t;????");
+                DIS ("PRT2_PRINT");
+              }
+              else if (wait_arg == 6) {
+                DIS ("OUT PRT2");
               }
               else if (wait_arg == 8) {
-                DIS ("RAM2_R");
+                DIS ("PRT2_CLEAR/RAM2_R");
                 check_flags &= ~FLAG_IO_WRITE_PREV;
                 new_check_flags |= FLG_IOR_EXPECTED;
               }
