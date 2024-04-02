@@ -127,21 +127,35 @@ static int display_process2(void *priv, struct bus *bus)
     return 0;
 }
 
+static int displaysr60_process(void *priv, struct bus *bus)
+{
+    return 0;
+}
+
+void display_ext(const char *line)
+{
+    strcpy(disp.out1, line);
+    printf(" \r%s", disp.out1);
+}
+
 void display_print(const char *line)
 {
     printf("|      %.20s\n", line);
-    printf("\r%s", disp.out);
+    printf("\r%s", disp.out1);
 }
 
 void display_dbgprint(const char *line)
 {
     printf("|d     %.13s %s\n", disp.out1, line);
-    printf("\r%s", disp.out);
+    printf("\r%s", disp.out1);
 }
 
 int display_init(struct chip *chip, const char *name)
 {
-    if (name && (!strcmp(name, "ti58") || !strcmp(name, "ti58c") ||
+    if (name && !strcmp(name, "sr60")) {
+        chip->process = displaysr60_process;
+    }
+    else if (name && (!strcmp(name, "ti58") || !strcmp(name, "ti58c") ||
             !strcmp(name, "ti59") || !strcmp(name, "sr51-II"))) {
         chip->process = display_process2;
         printf("new display\n");

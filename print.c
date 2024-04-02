@@ -27,6 +27,8 @@ struct print {
     char buffer[BUFFER_SIZE+1];
     int head;
     int busy;
+    uint32_t mask;
+    const char *print_font;
 };
 
 /* table are present in ti59 service manual and
@@ -40,6 +42,44 @@ static const char print_font[64] = {
   'x','*','s','p','e','(',')',',', /* s=sqrt, p=pi */
   '^','%','|','/','=','\'', '#','~', /* | is xchg, # is ^x, ~ is nX */
   'z','?',':','!',']','"','[','$' /* z is ^2, ] is 2nd, " is delta, [ is product, $ is sum */
+};
+
+/* . : ok
+ * - : ok
+ * / : ok
+ * + : ok
+ * = : ok
+ * x : ok
+ * : : ok
+ * # / ^x : ok
+ * e : ok
+ * s/sqrt : ok
+ * z/ ^2 : ok
+ * ! : ?
+ * |/xch : ok
+ * ,
+ * '
+ * (
+ * ~/nX
+ * "/delta : ok
+ * ] / 2nd
+ * )
+ * $/sum
+ * ^
+ * *
+ * p/pi
+ * [
+ * % : ok
+ */
+static const char print_font_sr60[64] = {
+  ' ','0','1','2','3','4','5','6',
+  '7','8','9','.','z','#','!','"',
+  '=','-','+',':','x','\'', '(','~',
+  's',',',']',')','/','|','e','$',
+  'Q','R','S','T','U','V','W','X',
+  'Y','Z','*','p','?','^','%','[',
+  'A','B','C','D','E','F','G','H',
+  'I','J','K','L','M','N','O','P',
 };
 
 /* should reuse print font symbol ! */
@@ -111,7 +151,7 @@ static const struct {
  * 1       PRT_PRINT       x        x
  * 1       PRT_FEED        x        x
  */
- 
+
 static void print_step(struct print *print)
 {
     if (!print->head)
@@ -123,17 +163,21 @@ static int print_process(void *priv, struct bus *bus)
 {
     struct print *print = priv;
     if (bus->sstate == 15 && !bus->write) {
+        if ((bus->irg & 0xFF0F) != print->mask)
+            return 0;
         switch (bus->irg) {
             case 0x0A68:
+            case 0x0A66:
             {
                 /* load char */
                 int code = (bus->ext >> 3) & 0x3F;
-		        print->buffer[print->head] = print_font[code];
+		        print->buffer[print->head] = print->print_font[code];
                 LOG("PRINT_CHAR[%d]='%c' ", print->head, print->buffer[print->head]);
                 print_step(print);
                 break;
             }
             case 0x0A78:
+            case 0x0A76:
             {
                 /* load func */
                 int code = (bus->ext >> 3) & 0x7F;
@@ -160,12 +204,14 @@ static int print_process(void *priv, struct bus *bus)
                 break;
             }
             case 0x0A88:
+            case 0x0A86:
                 /* clear */
                 LOG("PRINT_CLEAR[%d]='%.20s' ", print->head, print->buffer);
-                memset(print->buffer, ' ', sizeof(print->buffer));
+                memset(print->buffer, ' ', BUFFER_SIZE);
                 print->head = BUFFER_SIZE - 1;
                 break;
             case 0x0A98:
+            case 0x0A96:
                 /* step */
                 if (print->busy) {
                     //report busy
@@ -176,8 +222,12 @@ static int print_process(void *priv, struct bus *bus)
                 }
                 break;
             case 0x0AA8:
+            case 0x0AA6:
                 /* print */
-                display_print(print->buffer);
+                if (bus->irg == 0x0AA6)
+                    display_ext(print->buffer);
+                else
+                    display_print(print->buffer);
                 LOG("PRINT[%d]='%.20s' ", print->head, print->buffer);
                 break;
             case 0x0AB8:
@@ -190,7 +240,7 @@ static int print_process(void *priv, struct bus *bus)
 
 
 
-int printer_init(struct chip *chip)
+int printer_init(struct chip *chip, enum printer_type type)
 {
     struct print *printer;
 
@@ -201,5 +251,15 @@ int printer_init(struct chip *chip)
     printer->busy = 0;
     chip->priv = printer;
     chip->process = print_process;
+    if (type == TMC0253)
+        printer->mask = 0x0A06;
+    else
+        printer->mask = 0x0A08;
+
+    if (type == TMC0251)
+        printer->print_font = print_font;
+    else
+        printer->print_font = print_font_sr60;
+
     return 0;
 }

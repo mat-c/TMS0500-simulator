@@ -54,6 +54,8 @@ static struct {
   unsigned int key_press_mask;
   unsigned int key_unpress_mask;
 
+  int scan_noidle;
+
 
   int keyboardidle;
 
@@ -102,6 +104,41 @@ static const char *key_help_ti58 =
 	  "[R/S]=$       [0\\Dsz]=0     [.\\Adv]=.   [+/-\\Prt]=n  [=\\List]=Enter\n"
       "-------\n"
 	  "PRINT=#        TRACE=?        ADVANCE=@\n";
+
+static const struct keymap key_table_sr60[] = {
+    //XXX todo
+        {0x11, 0, 'A', 0},   {0x21, 0, 'B', 0},  {0x31, 0, 'C', 0},    {0x51, 0, 'D', 0},  {0x61, 0, 'E', 0},
+        {0x12, 0, 0x1B, 0},  {0x22, 0, 'I', 0},  {0x32, 0, 'l', 0},    {0x52, 0, 0x7F, 0}, {0x54, 0, ' ', 0},
+        {0x13, 0, 'p', 0}, 	 {0x23, 0, 's', 0},  {0x33, 0, 'c', 0},    {0x53, 0, 't', 0},  {0x63, 0, 'S', 0},
+        {0x14, 0, 'g', 0},   {0x24, 0, '>', 0},  {0x34, 0, '<', 0},    {0x54, 0, '&', 0},  {0x64, 0, 'y', 0},
+        {0x15, 0, 'b', 0},   {0x25, 0, 'e', 0},  {0x35, 0, '(', 0},   {0x55, 0, ')', 0},   {0x65, 0, '/', 0},
+        {0x16, 0, 'i', 0},   {0x07, 0, '7', 0},   {0x08, 0, '8', 0},   {0x09, 0, '9', 0},    {0x66, 0, '*', 0},
+        {0x17, 0, 'd', 0},   {0x04, 0, '4', 0},   {0x05, 0, '5', 0},   {0x06, 0, '6', 0},    {0x67, 0, '-', 0},
+        {0x18, 0, 'r', 0},   {0x01, 0, '1', 0},   {0x02, 0, '2', 0},   {0x03, 0, '3', 0},    {0x68, 0, '+', 0},
+        {0x19, 0, '$', 0},   {0x0A, 0, '0', 0},   {0x39, 0, '.', 0},   {0x59, 0, 'n', 0},    {0x69, 0, '\n', 0},
+        {0x5E, KEY_ONOFF, 'R', 0},
+        {0x4A, KEY_ONOFF, '~', 0}, // card inserted
+        // printer buttons
+        {0x2C, 0, '#', 0}, // PRINT
+        {0x2F, KEY_ONOFF, '?', 0}, // TRACE
+        {0x0C, 0, '@', 0}, // ADVANCE
+
+        {0}
+};
+static const char *key_help_sr60 =
+      "[A]=A          [B]=B          [C]=C         [D]=D         [E]=E\n"
+	  "[2nd]=Esc      [INV]=I        [ln\\log]=l   [CE\\x!]=Back [CLR\\1/x]=Space\n"
+      "[LRN\\IND]=p    [sin\\D.MS]=s   [cos\\D/R]=c  [tan\\P/R]=t  [xsqrty\\sqrt]=S\n"
+	  "[GTO\\LBL]=g    [STO\\CMs]=>    [RCL\\Exc]=<  [SUM\\Prd]=&  [Y^x\\x^2]=y\n"
+      "[SBR\\rtn]=b    [EE\\Fix]=e     [(\\dsz]=(    [)\\pi]=)     [/\\StFlg]=/\n"
+	  "[Ins/del]=i    [7]=7          [8]=8        [9]=9        [x\\IfFlg]=*\n"
+	  "[SST\\BST]=d    [4]=4          [5]=5        [6]=6        [-\\IfErr]=-\n"
+	  "[Hlt\\rset]=r   [1]=1          [2]=2        [3]=3        [+\\IfPos]=+\n"
+	  "[R\\read]=$     [0/list]=0     [./ptr]=.    [+/-/pap]=n  [=/IfZero]=Enter\n"
+      "----------\n"
+      "RAD=R\n"
+	  "PRINT=#        TRACE=?        ADVANCE=@\n";
+
 
 static const struct keymap key_table_sr52[] = {
         {0x11, 0, 'A', 0},   {0x21, 0, 'B', 0},  {0x31, 0, 'C', 0},    {0x51, 0, 'D', 0},  {0x61, 0, 'E', 0},
@@ -299,6 +336,22 @@ static int key_read2(struct bus *bus, int scan_all_press)
         if (ret != 1) {
             return -1;
         }
+#if 1
+        if (AsciiChar == '{') {
+            static char c = 0;
+            printf("\nkey=0x%x\n", c);
+            cpu.key_count = cpu.key_press_cycle;
+            cpu.key_code = c++;
+            //if ((c & 0xF) == 0xF)
+            //    c++;
+            /* skip busy */
+            if (c == 0x40)
+                c = 0x50;
+            if (c == 0x70)
+                c = 0;
+            return 0;
+        }
+#endif
     }
     for (size = 0; cpu.keymap[size].ascii; size++) {
         if (cpu.keymap[size].ascii && cpu.keymap[size].ascii == AsciiChar) {
@@ -363,7 +416,7 @@ static int key_process(void *priv, struct bus *bus)
             if (!bus->idle) {
                 int scan = !(bus->irg & 8);
                 /* only scan=0 */
-                if (!scan && bus->dstate < 13 && bus->dstate > 0 ) {
+                if ((!scan && bus->dstate < 15 && bus->dstate > 0) || cpu.scan_noidle) {
                     if (cpu.key_countr <= 0) {
                         if (key_read2(bus, 0) < 0)
                             return -1;
@@ -513,6 +566,12 @@ int key_init(struct chip *chip, const char *name, enum hw hw_opt)
         cpu.keymap = key_table_sr51;
         printf(key_help_sr51);
         /* no printer detection on sr51 */
+    }
+    else if (!strcmp(name, "sr60")) {
+        cpu.keymap = key_table_sr60;
+        printf(key_help_sr60);
+        cpu.scan_noidle = 1;
+        cpu.key_press_cycle = 3;
     }
     else if (!strcmp(name, "sr52")) {
         cpu.keymap = key_table_sr52;

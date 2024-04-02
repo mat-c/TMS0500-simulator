@@ -51,6 +51,12 @@ enum hw {
     HW_CDR = 2,
 };
 
+enum printer_type {
+    TMC0251,
+    TMC0253,
+    TMC0254,
+};
+
 void disasm (unsigned addr, unsigned opcode);
 
 
@@ -67,11 +73,12 @@ int load_dump8 (unsigned char *buf, int buf_len, const char *name);
 int display_init(struct chip *chip, const char *name);
 void display_print(const char *line);
 void display_dbgprint(const char *line);
+void display_ext(const char *line);
 int key_init(struct chip *chip, const char *name, enum hw hw_opt);
 
 int scom_init(struct chip *chip, const char *name);
 int ram_init(struct chip *chip, int addr);
 int ram2_init(struct chip *chip, int addr);
-int printer_init(struct chip *chip);
+int printer_init(struct chip *chip, enum printer_type type);
 
 int lib_init(struct chip *chip, const char *name);
