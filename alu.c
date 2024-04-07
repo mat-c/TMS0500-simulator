@@ -362,8 +362,9 @@ int execute (unsigned short opcode) {
                         if (log_flags & LOG_SHORT)
                             LOG ("KR=%04X COND=0", cpu.KR);
                     } else
-                        if (cpu.digit) {
-                            // wait for digit 0 counter - end of scan
+                        if (cpu.digit != 15) {
+                            // wait for digit 15 counter - end of scan
+                            // SR60 scan from D14 to D15
                             cpu.flags |= FLG_HOLD;
                             return 11;
                         }
@@ -883,7 +884,8 @@ int alu_init(struct chip *chip)
     //cpu.KR = 2;
     /* set cond for easy compare with other logs */
     cpu.flags |= FLG_COND;
-#if 1
+#if 0
+    /* ti5230 do not clear anything ... */
     memset(cpu.A, 0xE, sizeof(cpu.A));
     memset(cpu.B, 0xE, sizeof(cpu.B));
     /* ti58 is doing ADD     IO.ALL,C,#0
