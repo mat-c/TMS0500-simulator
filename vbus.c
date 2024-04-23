@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
     }
 
     ret |= alu_init(&chipss[i++]);
-    while ((opt = getopt(argc, argv, "r:s:k:Rmdpl:")) != -1) {
+    while ((opt = getopt(argc, argv, "r:s:k:Rmdpl:c:")) != -1) {
         switch (opt) {
         case 'r':
             ret |= brom_init(&chipss[i++], optarg, disasm);
@@ -126,6 +126,9 @@ int main(int argc, char *argv[])
             break;
         case 'l':
             ret |= lib_init(&chipss[i++], optarg);
+            break;
+        case 'c':
+            ret |= crd_init(&chipss[i++], optarg);
             break;
         case 'd':
             disasm = 1;

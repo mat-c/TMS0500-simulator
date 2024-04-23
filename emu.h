@@ -75,3 +75,4 @@ int ram2_init(struct chip *chip, int addr);
 int printer_init(struct chip *chip);
 
 int lib_init(struct chip *chip, const char *name);
+int crd_init(struct chip *chip, const char *name);
