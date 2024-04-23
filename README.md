@@ -14,32 +14,29 @@ For that each chip is implemented in a separate file and communicate with
 bus like shared data.
 
 
-== hardware details ==
-TMC0501 is connected to other chips with :
-- clk signals : idle/clk1/clk2
-- irg : instruction rom chips to TMC0501
-- ext : data communication (bidir)
-- iox4 : data communication for alu data (bidir)
-- lines to driver led segment display (segA-H + dpt)
-- lines to read keyboard
+== How to use it ==
 
-irg/ext/io are open drain active high (pull down when not driven).
+download firmware
+```
+./bin/get_rom.sh
+```
 
-one instruction cycle is 16 clk tick : S0 to S15
+run the selected model
 
-irg contains 13bits instruction send during S3 to S15
-every chip listen to irg to synchronize on the current instruction
+```
+./bin/SR50.sh
+```
 
-For one cycle, irg/iox4 have only one master that is determined by current
-instruction
+```
+./bin/ti59.sh
+```
 
-ext is more complex. It is like i2c.
-ext[S0]: PREG / TMC0501 out
-ext[S1]: COND / set by TMC0501 but can also be set by other chips (card reader)
-ext[S2]: HOLD / set by TMC0501 but can also be set by other chips (card reader)
-ext[S3..S15]: data from/to TMC0501
 
-== software details ==
-struct bus represent the connection between each chips
+you can pass option "-p" to enable printer
 
-for efficiency instead of doing transfert bit per bit, it is possible to output/input up to 16bits.
+Key mapping is print on startup
+
+You can check doc dir for more technical information.
+
+
+
