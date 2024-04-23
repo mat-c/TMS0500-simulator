@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
     int disasm_crom = 0;
     enum hw hw_opt;
     char *keyb_name = NULL;
-    const char *options = "r:s:k:RmpPl:dDv:";
+    const char *options = "r:s:k:RmpPl:c:dDv:";
 
     /* first pass for debug options */
     while ((opt = getopt(argc, argv, options)) != -1) {
@@ -159,6 +159,9 @@ int main(int argc, char *argv[])
             break;
         case 'l':
             ret |= lib_init(&chipss[i++], optarg, disasm_crom);
+            break;
+        case 'c':
+            ret |= crd_init(&chipss[i++], optarg);
             break;
         /*ignore debug */
         case 'd':
