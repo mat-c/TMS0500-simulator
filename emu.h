@@ -82,3 +82,5 @@ int ram2_init(struct chip *chip, int addr);
 int printer_init(struct chip *chip, enum printer_type type);
 
 int lib_init(struct chip *chip, const char *name);
+
+int aux_init(struct chip *chip, const char *name);

@@ -158,6 +158,7 @@ int main(int argc, char *argv[])
     if (i + 2 > CHIPS_NUM_MAX)
         return 2;
 
+    ret |= aux_init(&chipss[i++], keyb_name);
     ret |= display_init(&chipss[i++], keyb_name);
     ret |= key_init(&chipss[i++], keyb_name, hw_opt);
 
