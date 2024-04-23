@@ -83,3 +83,5 @@ int printer_init(struct chip *chip, enum printer_type type);
 
 int lib_init(struct chip *chip, const char *name, int disasm);
 extern const char libtoken[100][8];
+
+int aux_init(struct chip *chip, const char *name);
