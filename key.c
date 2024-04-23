@@ -107,16 +107,16 @@ static const char *key_help_ti58 =
 
 static const struct keymap key_table_sr60[] = {
     //XXX todo
-        {0x11, 0, 'A', 0},   {0x21, 0, 'B', 0},  {0x31, 0, 'C', 0},    {0x51, 0, 'D', 0},  {0x61, 0, 'E', 0},
+        {0x6D, 0, 'A', 0},   {0x57, 0, 'B', 0},  {0x1A, 0, 'C', 0},    {0x51, 0, 'D', 0},  {0x61, 0, 'E', 0},
         {0x12, 0, 0x1B, 0},  {0x22, 0, 'I', 0},  {0x32, 0, 'l', 0},    {0x52, 0, 0x7F, 0}, {0x54, 0, ' ', 0},
         {0x13, 0, 'p', 0}, 	 {0x23, 0, 's', 0},  {0x33, 0, 'c', 0},    {0x53, 0, 't', 0},  {0x63, 0, 'S', 0},
         {0x14, 0, 'g', 0},   {0x24, 0, '>', 0},  {0x34, 0, '<', 0},    {0x54, 0, '&', 0},  {0x64, 0, 'y', 0},
         {0x15, 0, 'b', 0},   {0x25, 0, 'e', 0},  {0x35, 0, '(', 0},   {0x55, 0, ')', 0},   {0x65, 0, '/', 0},
-        {0x16, 0, 'i', 0},   {0x07, 0, '7', 0},   {0x08, 0, '8', 0},   {0x09, 0, '9', 0},    {0x66, 0, '*', 0},
-        {0x17, 0, 'd', 0},   {0x04, 0, '4', 0},   {0x05, 0, '5', 0},   {0x06, 0, '6', 0},    {0x67, 0, '-', 0},
+        {0x64, 0, 'i', 0},   {0x07, 0, '7', 0},   {0x08, 0, '8', 0},   {0x09, 0, '9', 0},    {0x66, 0, '*', 0},
+        {0x65, 0, 'd', 0},   {0x04, 0, '4', 0},   {0x05, 0, '5', 0},   {0x06, 0, '6', 0},    {0x67, 0, '-', 0},
         {0x18, 0, 'r', 0},   {0x01, 0, '1', 0},   {0x02, 0, '2', 0},   {0x03, 0, '3', 0},    {0x68, 0, '+', 0},
-        {0x19, 0, '$', 0},   {0x0A, 0, '0', 0},   {0x39, 0, '.', 0},   {0x59, 0, 'n', 0},    {0x69, 0, '\n', 0},
-        {0x5E, KEY_ONOFF, 'R', 0},
+        {0x19, 0, '$', 0},   {0x0A, 0, '0', 0},   {0x39, 0, '.', 0},   {0x5b, 0, 'n', 0},    {0x69, 0, '\n', 0},
+        {0x50, 0, 'R', 0},
         {0x4A, KEY_ONOFF, '~', 0}, // card inserted
         // printer buttons
         {0x2C, 0, '#', 0}, // PRINT
@@ -228,6 +228,34 @@ static const char *key_help_sr51II =
 	  "[SUM\\Prd]=&   [1]=1          [2]=2        [3]=3        [+\\y']=+\n"
 	  "[CE]=Back     [0]=0     [.]=.    [+/-]=n  [=]=Enter\n";
 
+static const struct keymap key_table_ti5230[] = {
+        
+        {0x15, 0, 0x1B, 0},  {0x25, 0, 's', 0},  {0x35, 0, 'c', 0},   
+        {0x17, 0, 'I', 0}, 	 {0x27, 0, '%', 0},  {0x37, 0, 'l', 0},    {0x57, 0, 'E', 0},  {0x67, 0, 'r', 0},
+        {0x13, 0, 'X', 0},   {0x23, 0, 'x', 0},  {0x33, 0, 'S', 0},    {0x53, 0, 'i', 0},  {0x63, 0, 'y', 0},
+        {0x14, 0, 'U', 0},   {0x24, 0, 'e', 0},  {0x34, 0, '(', 0},   {0x54, 0, ')', 0},
+        
+        {0x64, 0, ' ', 0}, {0x2A, 0, '/', 0}, {0x69, 0, 't', 0},
+        {0x15, 0, '7', 0},   {0x16, 0, '8', 0},   {0x17, 0, '9', 0},    {0x5A, 0, '*', 0},
+        {0x25, 0, '4', 0},   {0x26, 0, '5', 0},   {0x27, 0, '6', 0},    {0x18, 0, '-', 0},
+        {0x55, 0, '1', 0},   {0x56, 0, '2', 0},   {0x57, 0, '3', 0},    {0x58, 0, '+', 0},
+        {0x65, 0, '0', 0},   {0x66, 0, 'x', 0},   {0x67, 0, '.', 0},    {0x6A, 0, '\n', 0},
+
+        {0x51, 0, '#', 0}, // PRINT
+        {0x12, 0, '@', 0}, // PRINT
+
+        {0}
+};
+static const char *key_help_ti5230 =
+	  "[2nd]=Esc      [sin\\sinh]=s        [cos\\cosh]=c   [tan\\tanh]=t [CLR\\CA]=Space\n"
+	  "[INV]=I        [%%\\D%%]=%%       [ln\\log]=l    [e^x\\10^x]=E  [xsqrty\\x!]=r\n"
+      "[xy]=X         [x^2\\MEAN]=x      [sqrt\\S.DEV]=S [1/x\\VAR]=i [Y^x\\CORR]=y\n"
+      "[SUM+\\SUM-]=U  [EE\\Eng]=e  [(\\const]=(    [)\\pi]=)     [/\\Slope]=/\n"
+      "[STO\\Fix]=>   [7]=7          [8]=8        [9]=9        [x\\Intcp]=*\n"
+	  "[RCL\\EXC]=<    [4]=4          [5]=5        [6]=6        [-\\x']=-\n"
+	  "[SUM\\Prd]=&   [1]=1          [2]=2        [3]=3        [+\\y']=+\n"
+	  "[CE]=Back     [0]=0     [.]=.    [+/-]=n  [=]=Enter\n"
+	  "PRINT=#        TRACE=?        ADVANCE=@\n";
 
 static const struct keymap key_table_sr51[] = {
         {0x24, 0, 0x1B, 0},   {0x57, 0, 's', 0},   {0x56 , 0, 'c', 0},   {0x5D, 0, 't', 0},   {0x21, 0, ' ', 0},
@@ -324,7 +352,7 @@ static int key_read2(struct bus *bus, int scan_all_press)
     unsigned char AsciiChar = 0;
     int size;
 
-    if (!scan_all_press) {
+    if (!scan_all_press || 0) {
         tcsetattr(0, TCSANOW, &new_settings);
         int ret = read(0, &AsciiChar, 1);
         tcsetattr(0, TCSANOW, &new_settings_scan);
@@ -338,7 +366,7 @@ static int key_read2(struct bus *bus, int scan_all_press)
         }
 #if 1
         if (AsciiChar == '{') {
-            static char c = 0;
+            static char c = 0x0;
             printf("\nkey=0x%x\n", c);
             cpu.key_count = cpu.key_press_cycle;
             cpu.key_code = c++;
@@ -560,6 +588,13 @@ int key_init(struct chip *chip, const char *name, enum hw hw_opt)
     else if (!strcmp(name, "sr51-II")) {
         cpu.keymap = key_table_sr51II;
         printf(key_help_sr51II);
+    }
+    else if (!strcmp(name, "ti5230")) {
+        cpu.key_press_mask = 0xF1;
+        cpu.key_unpress_mask = 0xF1;
+        cpu.key_unpress_cycle = 8;
+        cpu.keymap = key_table_ti5230;
+        printf(key_help_ti5230);
     }
     else if (!strcmp(name, "sr51")) {
         cpu.key_press_cycle = 1;

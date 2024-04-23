@@ -160,6 +160,7 @@ int main(int argc, char *argv[])
 
     ret |= aux_init(&chipss[i++], keyb_name);
     ret |= display_init(&chipss[i++], keyb_name);
+    ret |= display2_init(&chipss[i++], keyb_name);
     ret |= key_init(&chipss[i++], keyb_name, hw_opt);
 
     printf("number of chip %d\n", i);

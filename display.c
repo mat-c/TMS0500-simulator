@@ -32,6 +32,25 @@ char *display_debug(void)
     return disp.out1;
 }
 
+static int display_process_all(void *priv, struct bus *bus)
+{
+    /* alu update on S0W and clear at S14W */
+    if (bus->sstate == 0 && !bus->write) {
+                disp.out[disp.pos++] = bus->display_digit;
+        if (bus->dstate==0) {
+            if (memcmp(disp.out1, disp.out, sizeof(disp.out1))) {
+                LOG("\nDISP='%s'\n", disp.out);
+                printf(" \r%s", disp.out);
+                memcpy(disp.out1, disp.out, sizeof(disp.out1));
+            }
+            //memset(disp.out, '\0', sizeof(disp.out));
+            memset(disp.out, ' ', sizeof(disp.out)-1);
+            disp.pos = 0;
+        }
+    }
+    return 0;
+}
+
 static int display_process(void *priv, struct bus *bus)
 {
     /* alu update on S0W and clear at S14W */
@@ -136,6 +155,7 @@ void display_ext(const char *line)
 {
     strcpy(disp.out1, line);
     printf(" \r%s", disp.out1);
+    //printf(" \n%s", disp.out1);
 }
 
 void display_print(const char *line)
@@ -152,8 +172,9 @@ void display_dbgprint(const char *line)
 
 int display_init(struct chip *chip, const char *name)
 {
-    if (name && !strcmp(name, "sr60")) {
+    if (name && (!strcmp(name, "sr60") || !strcmp(name, "ti5230"))) {
         chip->process = displaysr60_process;
+        //chip->process = display_process_all;
     }
     else if (name && (!strcmp(name, "ti58") || !strcmp(name, "ti58c") ||
             !strcmp(name, "ti59") || !strcmp(name, "sr51-II"))) {
