@@ -1,0 +1,22 @@
+== ram ==
+
+http://www.datamath.org/Sci/WEDGE/SR-52_Undocumented.html#regs
+
+CMs
+RAM 40-99  user 0-59
+
+CLR
+RAM 0-9    user 60-69
+reg G
+
+Program
+RAM 10-37   user 70 - 97
+
+not used :
+RAM 38-39   user 98 - 88
+
+reg F contain program counter
+
+
+hardware support only ram from 0 to 59 (2 x TMC0599)
+RAM 60 - 99 (user 20-59) is supported by firmware but need special hardware !

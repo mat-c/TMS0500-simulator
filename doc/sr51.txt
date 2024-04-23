@@ -1,0 +1,16 @@
+
+== random generator ==
+
+During waiting for key, firmware is incrementing C from 0 to 99 (exp)
+at D0 inc C (and change R5)
+at D15 R5 is restored
+at D14 cond is clear
+at D13 keyboard scan
+
+R5 is changed at D0/D15 to no impact display (R5 control .)
+This C is used for random generator
+
+
+== printer ==
+
+printer detection is not tested. No KP-0 check
