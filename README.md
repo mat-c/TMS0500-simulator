@@ -31,6 +31,9 @@ run the selected model
 ./bin/ti59.sh
 ```
 
+Key mapping is print on startup
+
+You can check doc dir for more technical information.
 
 === printer ===
 you can pass option "-p" to enable printer
@@ -66,7 +69,7 @@ Manual http://www.datamath.org/Sci/WEDGE/Modules.htm
 
 ==== ROM ====
 
-You can disassemble on stderr the rom with '-d option'
+You can disassemble on stderr the rom with '-d' option
 
 ```
 ./bin/ti59.sh -d
@@ -75,12 +78,11 @@ You can disassemble on stderr the rom with '-d option'
 ./bin/SR52.sh -d
 ```
 
+==== CROM ====
 
+You can disassemble on stderr the rom with '-D' option
 
-
-Key mapping is print on startup
-
-You can check doc dir for more technical information.
-
-
+```
+./bin/ti59.sh -l rom/module-lib/TMC0541.txt -D
+```
 

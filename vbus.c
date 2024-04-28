@@ -88,6 +88,7 @@ static void help(void)
     printf("-p: add printer\n");
     printf("-l file: add library file (ti5x)\n");
     printf("-d: disassemble rom on stderr and exit\n");
+    printf("-D: disassemble crom on stderr and exit\n");
 }
 
 int main(int argc, char *argv[])
@@ -97,9 +98,10 @@ int main(int argc, char *argv[])
     int ret = 0;
     int ram_addr = 0;
     int disasm = 0;
+    int disasm_crom = 0;
     enum hw hw_opt;
     char *keyb_name = NULL;
-    const char *options = "r:s:k:Rmpl:d";
+    const char *options = "r:s:k:Rmpl:dD";
 
     log_file = stdout;
     //log_flags = 7;
@@ -115,6 +117,9 @@ int main(int argc, char *argv[])
         switch (opt) {
         case 'd':
             disasm = 1;
+            break;
+        case 'D':
+            disasm_crom = 1;
             break;
         default:
             break;
@@ -144,10 +149,11 @@ int main(int argc, char *argv[])
             hw_opt = HW_PRINTER;
             break;
         case 'l':
-            ret |= lib_init(&chipss[i++], optarg);
+            ret |= lib_init(&chipss[i++], optarg, disasm_crom);
             break;
         /*ignore debug */
         case 'd':
+        case 'D':
             break;
         default:
             help();
@@ -159,7 +165,7 @@ int main(int argc, char *argv[])
     if (ret)
         return 1;
 
-    if (disasm) {
+    if (disasm || disasm_crom) {
         return 0;
     }
 

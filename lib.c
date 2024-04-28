@@ -116,8 +116,36 @@ static int lib_process(void *priv, struct bus *bus)
 }
 
 
+static void dis(struct lib *lib)
+{
+    int program_count = (lib->data[0] >> 4) * 10 + (lib->data[0] & 0x0F);
+    int i;
+    FILE *old_out = log_file;
+    log_file = stderr;
 
-int lib_init(struct chip *chip, const char *name)
+    for (i = 1; i <= program_count; i++) {
+        unsigned int addr, end;
+        end = i * 2;
+        addr = (lib->data[end] >> 4) * 1000 + 
+               (lib->data[end] & 0x0F) * 100 + 
+               (lib->data[end+1] >> 4) * 10 + 
+               (lib->data[end+1] & 0x0F);
+        end = (lib->data[end+2] >> 4) * 1000 + 
+              (lib->data[end+2] & 0x0F) * 100 + 
+              (lib->data[end+3] >> 4) * 10 + 
+              (lib->data[end+3] & 0x0F);
+        DIS("========================\nProgram %u\n------------------------\n", i);
+        DIS("(%04u to %04u)\n", addr, end);
+        for (; addr < end; addr++) {
+            DIS("%04u\t%02X\t%s\n", addr, lib->data[addr], 
+                    libtoken[(lib->data[addr]>>4)*10+(lib->data[addr]&0x0F)]);
+        }
+    }
+    log_file = old_out;
+}
+
+
+int lib_init(struct chip *chip, const char *name, int disasm)
 {
     struct lib *lib;
     int size;
@@ -130,6 +158,9 @@ int lib_init(struct chip *chip, const char *name)
     lib->flags = lib->flags_delay = 0;
     memset(lib->data, 0x92, sizeof(lib->data));
     size = load_dump8(lib->data, sizeof(lib->data), name);
+    printf("crom '%s' size %d\n",
+            name, size);
+
 #if 0
     if (!size || size > sizeof(lib->data)) {
         printf("lib invalid\n");
@@ -151,5 +182,8 @@ int lib_init(struct chip *chip, const char *name)
 
     chip->priv = lib;
     chip->process = lib_process;
+
+    if (disasm)
+        dis(lib);
     return 0;
 }
