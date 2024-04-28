@@ -16,6 +16,11 @@ bus like shared data.
 
 ## How to use it
 
+build (only tested on linux)
+```
+make
+```
+
 download firmware
 ```
 ./bin/get_rom.sh
