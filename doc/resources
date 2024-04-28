@@ -1,4 +1,17 @@
+- http://hsl.wz.cz/ti\_59.htm
 
-SR52/SR56 program library :
+- http://www.datamath.org/Chips/TMS0500-CS.htm
 
-https://www.rskey.org/CMS/the-library/?view=article&id=12
+- https://www.rskey.org/CMS/the-library/?view=article&id=12
+  - SR52/SR56 program library
+  - SR50 / TI59 service manual
+
+- http://www.decodesystems.com/TI_SR-52_Troubleshooting.pdf
+  -- SR52 hw info
+
+
+- http://ti58c.phweb.me/sitem/pagespec.php?langue=EN&menu=Hardware%20Firmware&page=hardware.php&ecrW=1004&lsite=sitem
+  - TI 59-58 hardware annotations   Sipke de Wal (01/07/1955 - 13/05/2004)
+
+- https://github.com/ldo/ti5x_android / https://github.com/ldo/ti5x_android/tree/master/util
+  -- python disassemble for CROM
