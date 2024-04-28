@@ -32,7 +32,51 @@ run the selected model
 ```
 
 
+=== printer ===
 you can pass option "-p" to enable printer
+
+```
+./bin/ti59.sh -p
+```
+
+=== CROM ===
+you can pass option "-l" to load master lib
+
+```
+./bin/ti59.sh -p -l rom/module-lib/TMC0541.txt
+```
+You can test it using
+"2nd Pgm 01"
+"SBR ="
+
+It should print
+```
+MASTER
+1
+```
+and display "1"
+
+Additionnal library module can be found on
+http://www.datamath.org/Chips/TMC0540.htm
+
+Manual http://www.datamath.org/Sci/WEDGE/Modules.htm
+
+
+=== Debug ===
+
+==== ROM ====
+
+You can disassemble on stderr the rom with '-d option'
+
+```
+./bin/ti59.sh -d
+```
+```
+./bin/SR52.sh -d
+```
+
+
+
 
 Key mapping is print on startup
 
