@@ -1,4 +1,4 @@
-=ti59 and TMC0501 microcode simulator=
+# ti59 and TMC0501 microcode simulator
 
 This project allow to run microcode for TMC0501 generation calculator.
 See http://www.datamath.org/Chips/TMS0500-CS.htm for more information
@@ -14,7 +14,7 @@ For that each chip is implemented in a separate file and communicate with
 bus like shared data.
 
 
-== How to use it ==
+## How to use it
 
 download firmware
 ```
@@ -35,14 +35,14 @@ Key mapping is print on startup
 
 You can check doc dir for more technical information.
 
-=== printer ===
+### printer
 you can pass option "-p" to enable printer
 
 ```
 ./bin/ti59.sh -p
 ```
 
-=== CROM ===
+### CROM
 you can pass option "-l" to load master lib
 
 ```
@@ -65,17 +65,17 @@ http://www.datamath.org/Chips/TMC0540.htm
 Manual http://www.datamath.org/Sci/WEDGE/Modules.htm
 
 
-=== Debug ===
+### Debug
 
-==== log ====
+#### log
 You can enable log in log.txt file
 
 - '-v level'
--- level=1 : low
--- level=3 : medium
--- level=7 : high
+  - level=1 : low
+  - level=3 : medium
+  - level=7 : high
 
-==== ROM ====
+#### ROM
 
 You can disassemble on stderr the rom with '-d' option
 
@@ -86,7 +86,7 @@ You can disassemble on stderr the rom with '-d' option
 ./bin/SR52.sh -d
 ```
 
-==== CROM ====
+#### CROM
 
 You can disassemble on stderr the rom with '-D' option
 
