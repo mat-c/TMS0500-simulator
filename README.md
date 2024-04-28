@@ -3,9 +3,9 @@
 This project allow to run microcode for TMC0501 generation calculator.
 See http://www.datamath.org/Chips/TMS0500-CS.htm for more information
 
-This is based of previous work :
-http://hsl.wz.cz/ti\_59.htm
-https://www.hrastprogrammer.com/emulators.htm
+This is based of previous work from Hynek Sladký :
+- http://hsl.wz.cz/ti\_59.htm
+- https://www.hrastprogrammer.com/emulators.htm
 
 The goal is to able to run microcode of several calculator and understand
 how the differents chips work together.
