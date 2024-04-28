@@ -80,8 +80,14 @@ int run(struct chip chips[], struct bus *bus)
 
 static void help(void)
 {
-    printf("-r: rom file\n");
-    printf("-s: scom const file\n");
+    printf("-r file: add rom file\n");
+    printf("-s file: add scom const file\n");
+    printf("-k model: cal model\n");
+    printf("-R: add a ram module (can be repeated\n");
+    printf("-m: add a ti58c ram module (can be repeated\n");
+    printf("-p: add printer\n");
+    printf("-l file: add library file (ti5x)\n");
+    printf("-d: disassemble rom on stderr and exit\n");
 }
 
 int main(int argc, char *argv[])
@@ -93,6 +99,7 @@ int main(int argc, char *argv[])
     int disasm = 0;
     enum hw hw_opt;
     char *keyb_name = NULL;
+    const char *options = "r:s:k:Rmpl:d";
 
     log_file = stdout;
     //log_flags = 7;
@@ -103,7 +110,19 @@ int main(int argc, char *argv[])
     }
 
     ret |= alu_init(&chipss[i++]);
-    while ((opt = getopt(argc, argv, "r:s:k:Rmdpl:")) != -1) {
+    /* first pass for debug options */
+    while ((opt = getopt(argc, argv, options)) != -1) {
+        switch (opt) {
+        case 'd':
+            disasm = 1;
+            break;
+        default:
+            break;
+        }
+    }
+
+    optind = 1;
+    while ((opt = getopt(argc, argv, options)) != -1) {
         switch (opt) {
         case 'r':
             ret |= brom_init(&chipss[i++], optarg, disasm);
@@ -127,8 +146,8 @@ int main(int argc, char *argv[])
         case 'l':
             ret |= lib_init(&chipss[i++], optarg);
             break;
+        /*ignore debug */
         case 'd':
-            disasm = 1;
             break;
         default:
             help();
