@@ -101,17 +101,8 @@ int main(int argc, char *argv[])
     int disasm_crom = 0;
     enum hw hw_opt;
     char *keyb_name = NULL;
-    const char *options = "r:s:k:Rmpl:dD";
+    const char *options = "r:s:k:Rmpl:dDv:";
 
-    log_file = stdout;
-    //log_flags = 7;
-    if (log_flags) {
-        FILE *f = fopen("log.txt", "a");
-        if (f)
-            log_file = f;
-    }
-
-    ret |= alu_init(&chipss[i++]);
     /* first pass for debug options */
     while ((opt = getopt(argc, argv, options)) != -1) {
         switch (opt) {
@@ -121,12 +112,24 @@ int main(int argc, char *argv[])
         case 'D':
             disasm_crom = 1;
             break;
+        case 'v':
+            log_flags = atoi(optarg);
+            break;
         default:
             break;
         }
     }
+    log_file = stdout;
+    if (log_flags) {
+        FILE *f = fopen("log.txt", "a");
+        if (f)
+            log_file = f;
+    }
+
 
     optind = 1;
+
+    ret |= alu_init(&chipss[i++]);
     while ((opt = getopt(argc, argv, options)) != -1) {
         switch (opt) {
         case 'r':
@@ -154,6 +157,7 @@ int main(int argc, char *argv[])
         /*ignore debug */
         case 'd':
         case 'D':
+        case 'v':
             break;
         default:
             help();

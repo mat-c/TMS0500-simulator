@@ -67,6 +67,14 @@ Manual http://www.datamath.org/Sci/WEDGE/Modules.htm
 
 === Debug ===
 
+==== log ====
+You can enable log in log.txt file
+
+- '-v level'
+-- level=1 : low
+-- level=3 : medium
+-- level=7 : high
+
 ==== ROM ====
 
 You can disassemble on stderr the rom with '-d' option
