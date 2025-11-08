@@ -215,7 +215,8 @@ static int print_process(void *priv, struct bus *bus)
                 /* step */
                 if (print->busy) {
                     //report busy
-                    ;
+                    //it will loop on step instruction
+                    bus->key_line = 1 << KR_BIT;
                 }
                 else {
                     print_step(print);
@@ -232,6 +233,8 @@ static int print_process(void *priv, struct bus *bus)
                 break;
             case 0x0AB8:
                 /* advance half line */
+                /* XXX we advance one line instead of half */
+                display_print("");
                 break;
         }
     }
