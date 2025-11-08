@@ -43,10 +43,12 @@ static struct {
   unsigned char key[16];
   const struct keymap *keymap;
 
+  /* key in idle mode */
   unsigned char key_code;
   int key_count;
-  unsigned char key_coder;
-  int key_countr;
+  /* key in !idle mode */
+  unsigned char key_code_hw;
+  int key_count_hw;
 
 
   int key_press_cycle;
@@ -54,6 +56,7 @@ static struct {
   unsigned int key_press_mask;
   unsigned int key_unpress_mask;
 
+  /* allow scan=1 when not idle */
   int scan_noidle;
 
 
@@ -325,6 +328,7 @@ static int key_read2(struct bus *bus, int scan_all_press)
     int size;
 
     if (!scan_all_press) {
+        /* blocking read */
         tcsetattr(0, TCSANOW, &new_settings);
         int ret = read(0, &AsciiChar, 1);
         tcsetattr(0, TCSANOW, &new_settings_scan);
@@ -332,6 +336,7 @@ static int key_read2(struct bus *bus, int scan_all_press)
             return 0;
     }
     else {
+        /* not blocking read */
         int ret = read(0, &AsciiChar, 1);
         if (ret != 1) {
             return -1;
@@ -361,8 +366,8 @@ static int key_read2(struct bus *bus, int scan_all_press)
             if (!(cpu.keymap[size].flags & KEY_ONOFF)) {
                 //cpu.key[cpu.keymap[size].key_code & 0x0F] |= 1 << ((cpu.keymap[size].key_code >> 4) & 0x07);
                 if (!scan_all_press) {
-                    cpu.key_coder = cpu.keymap[size].key_code;
-                    cpu.key_countr = cpu.key_press_cycle * 10;
+                    cpu.key_code_hw = cpu.keymap[size].key_code;
+                    cpu.key_count_hw = cpu.key_press_cycle * 10;
                 }
                 else {
                     cpu.key_code = cpu.keymap[size].key_code;
@@ -401,8 +406,8 @@ static int key_process(void *priv, struct bus *bus)
      */
     if (bus->sstate == 15 && !bus->write) {
         if (bus->idle) {
-            cpu.key_countr = 0;
-            cpu.key_coder = 0;
+            cpu.key_count_hw = 0;
+            cpu.key_code_hw = 0;
         }
         else if (cpu.key_count > 0) {
             cpu.key_count = 0;
@@ -417,13 +422,13 @@ static int key_process(void *priv, struct bus *bus)
                 int scan = !(bus->irg & 8);
                 /* only scan=0 */
                 if ((!scan && bus->dstate < 15 && bus->dstate > 0) || cpu.scan_noidle) {
-                    if (cpu.key_countr <= 0) {
+                    if (cpu.key_count_hw <= 0) {
                         if (key_read2(bus, 0) < 0)
                             return -1;
                     }
                     else
-                        cpu.key_countr--;
-                    LOG("key read %d scan=%d idle=%d ", cpu.key_countr, scan, bus->idle);
+                        cpu.key_count_hw--;
+                    LOG("key read %d scan=%d idle=%d ", cpu.key_count_hw, scan, bus->idle);
                 }
             }
             else if (scan_all_press && cpu.key_count > 1) {
@@ -449,9 +454,9 @@ static int key_process(void *priv, struct bus *bus)
             /* key_count = 2 and 1 */
             bus->key_line |= 1 << ((cpu.key_code >> 4) & 0x07);
         }
-        if (bus->dstate == (cpu.key_coder & 0x0F) && cpu.key_countr > 0) {
+        if (bus->dstate == (cpu.key_code_hw & 0x0F) && cpu.key_count_hw > 0) {
             /* key_count = 2 and 1 */
-            bus->key_line |= 1 << ((cpu.key_coder >> 4) & 0x07);
+            bus->key_line |= 1 << ((cpu.key_code_hw >> 4) & 0x07);
         }
 
         bus->key_line |= cpu.key[bus->dstate];
@@ -570,6 +575,9 @@ int key_init(struct chip *chip, const char *name, enum hw hw_opt)
     else if (!strcmp(name, "sr60")) {
         cpu.keymap = key_table_sr60;
         printf(key_help_sr60);
+        /* at startup a scan read is done in not idle state
+         * when PROMPTING DESIRED? is displayed
+         */
         cpu.scan_noidle = 1;
         cpu.key_press_cycle = 3;
     }
