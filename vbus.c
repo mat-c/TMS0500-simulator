@@ -40,6 +40,8 @@ int run(struct chip chips[], struct bus *bus)
 
     memset(bus, 0, sizeof(*bus));
     bus->dstate = 15;
+    bus->display_digit = ' ';
+
     while (1) {
         bus->ext = 0;
         bus->irg = 0;

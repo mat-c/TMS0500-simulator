@@ -22,8 +22,8 @@
 #include "emu.h"
 
 static struct {
-    char out[30];
-    char out1[30];
+    char out[30]; /* segment output */
+    char out1[30]; /* printer */
     int pos;
 } disp;
 
@@ -129,25 +129,37 @@ static int display_process2(void *priv, struct bus *bus)
 
 static int displaysr60_process(void *priv, struct bus *bus)
 {
+    /* TODO extact led
+     * DEG : pin 26
+     * TRACE : pin 25
+     * PREC pint 24
+     * use bus->display_segH or bus->display_dpt at a specific D state ????
+     */
+
+    /* alu update on S0W and clear at S14W */
+    if (bus->sstate == 0 && !bus->write) {
+        if (log_flags & LOG_DEBUG)
+            LOG("\nDISP %d %d %d '%c'\n", bus->dstate, bus->display_segH, bus->display_dpt, bus->display_digit);
+    }
     return 0;
 }
 
 void display_ext(const char *line)
 {
-    strcpy(disp.out1, line);
-    printf(" \r%s", disp.out1);
+    strcpy(disp.out, line);
+    printf(" \r%s", disp.out);
 }
 
 void display_print(const char *line)
 {
     printf("|      %.20s\n", line);
-    printf("\r%s", disp.out1);
+    printf("\r%s", disp.out);
 }
 
 void display_dbgprint(const char *line)
 {
     printf("|d     %.13s %s\n", disp.out1, line);
-    printf("\r%s", disp.out1);
+    printf("\r%s", disp.out);
 }
 
 int display_init(struct chip *chip, const char *name)
