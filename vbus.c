@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
     int ram_addr = 0;
     int disasm = 0;
     int disasm_crom = 0;
-    enum hw hw_opt;
+    enum hw hw_opt = 0;
     char *keyb_name = NULL;
     const char *options = "r:s:k:RmpPl:c:dDv:";
 
