@@ -30,7 +30,7 @@
 #include "emu.h"
 
 
-#define	KEY_INVERT	0x01
+#define	KEY_INVERT	0x02
 #define	KEY_ONOFF	0x02
 struct keymap {
         unsigned char key_code;
@@ -599,5 +599,13 @@ int key_init(struct chip *chip, const char *name, enum hw hw_opt)
         cpu.keymap = key_table_sr50;
         printf(key_help_sr50);
     }
+    return 0;
+}
+
+int crd_clear_switch(void)
+{
+    /* close card reader */
+    cpu.key[10] |= (1 << KR_BIT);
+
     return 0;
 }

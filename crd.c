@@ -1,7 +1,8 @@
 #include <string.h>
+#include <stdio.h>
 #include "emu.h"
 
-#define MAX_DATA 5000
+#define MAX_DATA 300
 
 #define WAIT_IN_DATA 1
 struct crd {
@@ -9,6 +10,7 @@ struct crd {
     unsigned char data[MAX_DATA];
     int flags;
     int flags_delay;
+    FILE *file;
 };
 
 
@@ -65,7 +67,16 @@ static int crd_process(void *priv, struct bus *bus)
                 break;
             }
             case 0x0A48: /* crd off */
+                if (crd->pc)
+                        printf("crd read/write %d\n", crd->pc);
+                crd_clear_switch();
+                if (crd->file && crd->pc) {
+                        fseek(crd->file, 0, SEEK_SET);
+                        fwrite(crd->data, 1, sizeof(crd->data), crd->file);
+                        fflush(crd->file);
+                }
                 crd->pc = 0;
+                break;
             case 0x0A58: /* crd read */
             case 0x0AC8: /* crd write */
                 break;
@@ -79,16 +90,23 @@ static int crd_process(void *priv, struct bus *bus)
 int crd_init(struct chip *chip, const char *name)
 {
     struct crd *crd;
-    int size;
 
     crd = malloc(sizeof(*crd));
     if (!crd)
         return -1;
 
-    crd->pc = 0xDE;
+    crd->pc = 0;
     crd->flags = crd->flags_delay = 0;
     memset(crd->data, 0x92, sizeof(crd->data));
     printf("card support\n");
+    crd->file = fopen(name, "r+");
+    if (!crd->file)
+        crd->file = fopen(name, "w+");
+    if (crd->file) {
+            printf("open crd %s\n", name);
+            fseek(crd->file, 0, SEEK_SET);
+            fread(crd->data, 1, sizeof(crd->data), crd->file);
+    }
 
     chip->priv = crd;
     chip->process = crd_process;

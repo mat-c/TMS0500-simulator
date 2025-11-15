@@ -85,4 +85,6 @@ int lib_init(struct chip *chip, const char *name, int disasm);
 extern const char libtoken[100][8];
 
 int aux_init(struct chip *chip, const char *name);
+
 int crd_init(struct chip *chip, const char *name);
+int crd_clear_switch(void);
