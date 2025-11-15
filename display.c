@@ -23,7 +23,7 @@
 
 static struct {
     char out[30]; /* segment output */
-    char out1[30]; /* printer */
+    char out1[30]; /* final version of segment output */
     int pos;
 } disp;
 
@@ -69,6 +69,7 @@ static int display_process(void *priv, struct bus *bus)
             //LOG("\nSEG.%d='%c' (%s)\n", bus->dstate, bus->display_digit, disp.out);
         }
         if (bus->dstate==0) {
+            disp.out[disp.pos + 2] = bus->idle ? ' ' : 'B';
             if (memcmp(disp.out1, disp.out, sizeof(disp.out1))) {
                 LOG("\nDISP='%s'\n", disp.out);
                 printf(" \r%s", disp.out);
@@ -114,6 +115,7 @@ static int display_process2(void *priv, struct bus *bus)
             //LOG("\nSEG.%d='%c' (%s)\n", bus->dstate, bus->display_digit, disp.out);
         }
         if (bus->dstate==0) {
+            disp.out[disp.pos + 2] = bus->idle ? ' ' : 'B';
             if (memcmp(disp.out1, disp.out, sizeof(disp.out1))) {
                 LOG("\nDISP='%s'\n", disp.out);
                 printf(" \r%s", disp.out);
@@ -147,7 +149,11 @@ static int displaysr60_process(void *priv, struct bus *bus)
 void display_ext(const char *line)
 {
     strcpy(disp.out, line);
-    printf(" \r%s", disp.out);
+    if (memcmp(disp.out1, disp.out, sizeof(disp.out1))) {
+        LOG("\nDISP='%s'\n", disp.out);
+        printf(" \r%s", disp.out);
+        memcpy(disp.out1, disp.out, sizeof(disp.out1));
+    }
 }
 
 void display_print(const char *line)
