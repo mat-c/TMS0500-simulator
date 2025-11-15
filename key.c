@@ -56,10 +56,6 @@ static struct {
   unsigned int key_press_mask;
   unsigned int key_unpress_mask;
 
-  /* allow scan=1 when not idle */
-  int scan_noidle;
-
-
   int keyboardidle;
 
   // CPU cycle counter (used to simulate real CPU frequency)
@@ -91,7 +87,7 @@ static const struct keymap key_table_ti58[] = {
         {0x2F, KEY_ONOFF, '?', 0}, // TRACE
         {0x0C, 0, '@', 0}, // ADVANCE
         // card buttons
-        {0x4A, KEY_INVERT, '~', 0}, // card inserted
+        {0x4A, KEY_INVERT, '~', 0}, // card inserted D10 KR
         {0}
 };
 
@@ -104,7 +100,7 @@ static const char *key_help_ti58 =
 	  "[GTO\\Pause]=g [7\\x=t]=7     [8\\Nop]=8   [9\\Op]=9     [x\\Deg]=*\n"
 	  "[SBR\\Lbl]=b   [4\\x>=t]=4    [5\\S+]=5    [6\\avg]=6    [-\\Rad]=-\n"
 	  "[RST\\StFlg]=r [1\\IfFlg]=1   [2\\D.MS]=2  [3\\pi]=3     [+\\Grad]=+\n"
-	  "[R/S]=$       [0\\Dsz]=0     [.\\Adv]=.   [+/-\\Prt]=n  [=\\List]=Enter\n"
+	  "[R/S\\Write]=$ [0\\Dsz]=0     [.\\Adv]=.   [+/-\\Prt]=n  [=\\List]=Enter\n"
       "-------\n"
 	  "PRINT=#        TRACE=?        ADVANCE=@\n";
 
@@ -114,17 +110,15 @@ static const struct keymap key_table_sr60[] = {
         {0x12, 0, 0x1B, 0},  {0x22, 0, 'I', 0},  {0x32, 0, 'l', 0},    {0x52, 0, 0x7F, 0}, {0x54, 0, ' ', 0},
         {0x13, 0, 'p', 0}, 	 {0x23, 0, 's', 0},  {0x33, 0, 'c', 0},    {0x53, 0, 't', 0},  {0x63, 0, 'S', 0},
         {0x14, 0, 'g', 0},   {0x24, 0, '>', 0},  {0x34, 0, '<', 0},    {0x54, 0, '&', 0},  {0x64, 0, 'y', 0},
-        {0x15, 0, 'b', 0},   {0x25, 0, 'e', 0},  {0x35, 0, '(', 0},   {0x55, 0, ')', 0},   {0x65, 0, '/', 0},
-        {0x16, 0, 'i', 0},   {0x07, 0, '7', 0},   {0x08, 0, '8', 0},   {0x09, 0, '9', 0},    {0x66, 0, '*', 0},
-        {0x17, 0, 'd', 0},   {0x04, 0, '4', 0},   {0x05, 0, '5', 0},   {0x06, 0, '6', 0},    {0x67, 0, '-', 0},
-        {0x18, 0, 'r', 0},   {0x01, 0, '1', 0},   {0x02, 0, '2', 0},   {0x03, 0, '3', 0},    {0x68, 0, '+', 0},
-        {0x19, 0, '$', 0},   {0x0A, 0, '0', 0},   {0x39, 0, '.', 0},   {0x59, 0, 'n', 0},    {0x69, 0, '\n', 0},
-        {0x5E, KEY_ONOFF, 'R', 0},
-        {0x4A, KEY_ONOFF, '~', 0}, // card inserted
+        {0x15, 0, 'b', 0},   {0x25, 0, 'e', 0},  {0x35, 0, '(', 0},   {0x55, 0, ')', 0},   {0x13, 0, '/', 0},
+        {0x16, 0, 'i', 0},   {0x07, 0, '7', 0},   {0x08, 0, '8', 0},   {0x09, 0, '9', 0},    {0x14, 0, '*', 0},
+        {0x17, 0, 'd', 0},   {0x04, 0, '4', 0},   {0x05, 0, '5', 0},   {0x06, 0, '6', 0},    {0x11, 0, '-', 0},
+        {0x18, 0, 'r', 0},   {0x01, 0, '1', 0},   {0x02, 0, '2', 0},   {0x03, 0, '3', 0},    {0x12, 0, '+', 0},
+        {0x19, 0, '$', 0},   {0x0A, 0, '0', 0},   {0x39, 0, '.', 0},   {0x59, 0, 'n', 0},    {0x10, 0, '\n', 0},
         // printer buttons
-        {0x2C, 0, '#', 0}, // PRINT
-        {0x2F, KEY_ONOFF, '?', 0}, // TRACE
-        {0x0C, 0, '@', 0}, // ADVANCE
+        {0x2F, 0, '#', 0}, // PRINT
+        {0x52, 0, '?', 0}, // TRACE
+        {0x6E, 0, '@', 0}, // ADVANCE
 
         {0}
 };
@@ -321,14 +315,15 @@ static void Sleep(unsigned long long delay)
  * SR52/56 ti5x : 2 scan with key press, 2(3*) scan no key
  *
  * */
-static int key_read2(struct bus *bus, int scan_all_press)
+static int key_read2(struct bus *bus, int block, int scan)
 {
 
     unsigned char AsciiChar = 0;
     int size;
 
-    if (!scan_all_press) {
-        /* blocking read */
+    if (!block) {
+        //printf("nblk read %d\n", cpu.key_count);
+        /* not blocking read */
         tcsetattr(0, TCSANOW, &new_settings);
         int ret = read(0, &AsciiChar, 1);
         tcsetattr(0, TCSANOW, &new_settings_scan);
@@ -336,11 +331,22 @@ static int key_read2(struct bus *bus, int scan_all_press)
             return 0;
     }
     else {
-        /* not blocking read */
+        //printf("blk read %d\n", cpu.key_count);
+        /* blocking read */
+        LOG("key block\n");
+#if 1
         int ret = read(0, &AsciiChar, 1);
         if (ret != 1) {
             return -1;
         }
+#else
+        Sleep(20);
+        tcsetattr(0, TCSANOW, &new_settings);
+        int ret = read(0, &AsciiChar, 1);
+        tcsetattr(0, TCSANOW, &new_settings_scan);
+        if (ret == 0)
+            return 0;
+#endif
 #if 1
         if (AsciiChar == '{') {
             static char c = 0;
@@ -356,6 +362,10 @@ static int key_read2(struct bus *bus, int scan_all_press)
                 c = 0;
             return 0;
         }
+        if (AsciiChar == '[') {
+                cpu.key_count = 0;
+            return 0;
+        }
 #endif
     }
     for (size = 0; cpu.keymap[size].ascii; size++) {
@@ -365,7 +375,7 @@ static int key_read2(struct bus *bus, int scan_all_press)
             LOG("r.1=%c", AsciiChar);
             if (!(cpu.keymap[size].flags & KEY_ONOFF)) {
                 //cpu.key[cpu.keymap[size].key_code & 0x0F] |= 1 << ((cpu.keymap[size].key_code >> 4) & 0x07);
-                if (!scan_all_press) {
+                if (!scan) {
                     cpu.key_code_hw = cpu.keymap[size].key_code;
                     cpu.key_count_hw = cpu.key_press_cycle * 10;
                 }
@@ -405,55 +415,59 @@ static int key_process(void *priv, struct bus *bus)
      * at state S0 (for hold reason)
      */
     if (bus->sstate == 15 && !bus->write) {
-        if (bus->idle) {
-            cpu.key_count_hw = 0;
-            cpu.key_code_hw = 0;
-        }
-        else if (cpu.key_count > 0) {
-            cpu.key_count = 0;
-            cpu.key_code = 0;
-        }
-
         if (!(bus->ext & EXT_HOLD) && (bus->irg & 0xFF00) == 0x0800) {
             /* keyboard instruction */
-            int scan_all_press = (bus->irg & 0xFF) == cpu.key_press_mask;
-            int scan_all_unpress = (bus->irg & 0xFF) == cpu.key_unpress_mask;
-            if (!bus->idle) {
-                int scan = !(bus->irg & 8);
+            int scan = !(bus->irg & 8);
+            if (!scan) {
                 /* only scan=0 */
-                if ((!scan && bus->dstate < 15 && bus->dstate > 0) || cpu.scan_noidle) {
+                if (bus->dstate < 15 && bus->dstate > 0) {
                     if (cpu.key_count_hw <= 0) {
-                        if (key_read2(bus, 0) < 0)
+                        if (key_read2(bus, 0, 0) < 0)
                             return -1;
                     }
                     else
                         cpu.key_count_hw--;
-                    LOG("key read %d scan=%d idle=%d ", cpu.key_count_hw, scan, bus->idle);
+                    LOG("key read once %d D%d idle=%d ", cpu.key_count_hw, bus->dstate, bus->idle);
                 }
             }
-            else if (scan_all_press && cpu.key_count > 1) {
-                /* repeat key */
-                cpu.key_count--;
-                LOG("key repeat %d idle=%d addr=0x%x ", cpu.key_count, bus->idle, bus->addr);
-            }
-            else if (scan_all_unpress &&
-                    cpu.key_count > -cpu.key_unpress_cycle) {
-                /* force no key  */
-                cpu.key_code = 0;
-                cpu.key_count--;
-                LOG("key empty %d idle=%d addr=0x%x ", cpu.key_count, bus->idle, bus->addr);
-            }
-            else if (scan_all_press && cpu.key_code == 0) {
-                if (key_read2(bus, 1) < 0)
-                    return -1;
-                LOG("key read %d code=%x addr=0x%x ", cpu.key_count, cpu.key_code, bus->addr);
+            else {
+                int scan_all_press = (bus->irg & 0xFF) == cpu.key_press_mask;
+                int scan_all_unpress = (bus->irg & 0xFF) == cpu.key_unpress_mask;
+
+                if (scan_all_press && cpu.key_count > 1) {
+                    /* repeat key */
+                    cpu.key_count--;
+                    LOG("key repeat %d idle=%d addr=0x%x ", cpu.key_count, bus->idle, bus->addr);
+                }
+                else if (scan_all_unpress &&
+                        cpu.key_count > -cpu.key_unpress_cycle) {
+                    /* force no key  */
+                    cpu.key_code = 0;
+                    cpu.key_count--;
+                    LOG("key empty %d idle=%d addr=0x%x ", cpu.key_count, bus->idle, bus->addr);
+                    cpu.key_code_hw = 0;
+                    cpu.key_count_hw = 0;
+                }
+                else if (scan_all_press && cpu.key_code == 0) {
+                    /* read new key */
+                    if (key_read2(bus, bus->idle, 1) < 0)
+                        return -1;
+                    LOG("key read %d code=%x addr=0x%x ", cpu.key_count, cpu.key_code, bus->addr);
+                    cpu.key_code_hw = cpu.key_code;
+                    cpu.key_count_hw = cpu.key_count;
+                }
+                else {
+                     /* previous state */
+                     LOG("key same state %d idle=%d addr=0x%x ", cpu.key_count, bus->idle, bus->addr);
+                }
+
+                if (bus->dstate == (cpu.key_code & 0x0F) && cpu.key_count > 0) {
+                    /* key_count = 2 and 1 */
+                    bus->key_line |= 1 << ((cpu.key_code >> 4) & 0x07);
+                }
             }
         }
 
-        if (bus->dstate == (cpu.key_code & 0x0F) && cpu.key_count > 0) {
-            /* key_count = 2 and 1 */
-            bus->key_line |= 1 << ((cpu.key_code >> 4) & 0x07);
-        }
         if (bus->dstate == (cpu.key_code_hw & 0x0F) && cpu.key_count_hw > 0) {
             /* key_count = 2 and 1 */
             bus->key_line |= 1 << ((cpu.key_code_hw >> 4) & 0x07);
@@ -575,10 +589,6 @@ int key_init(struct chip *chip, const char *name, enum hw hw_opt)
     else if (!strcmp(name, "sr60")) {
         cpu.keymap = key_table_sr60;
         printf(key_help_sr60);
-        /* at startup a scan read is done in not idle state
-         * when PROMPTING DESIRED? is displayed
-         */
-        cpu.scan_noidle = 1;
         cpu.key_press_cycle = 3;
     }
     else if (!strcmp(name, "sr52")) {
