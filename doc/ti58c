@@ -52,3 +52,32 @@ see https://www.rskey.org/gene/calcgene/58mems.htm
 
 
 printer detection is not connected to KP-0, but KP-10.
+
+key scan is different
+
+previous model scan keyboard from D13 to D15 on KN KO KP KQ KS KT
+
+0AE0:   WAIT    D14
+0820:   KEY     20      ;scan=1 KN KO KP KQ KS KT
+
+ti58c
+
+press
+
+scan keyboard press from D12 to D15 on KN KO KP KQ KS KT
+
+0AD0:   WAIT    D13
+0820:   KEY     20      ;scan=1 KN KO KP KQ KS KT
+
+
+unpress
+
+062D:   0AF0:   WAIT    D15
+062E:   0824:   KEY     24      ;scan=1 KN KO KQ KS KT
+062F:   1011:   BRA0    0627
+0630:   0AD0:   WAIT    D13
+0631:   08FB:   KEY     FB      ;scan=0 KP
+0632:   1017:   BRA0    0627
+0633:   0AA0:   WAIT    D10
+0634:   08F3:   KEY     F3      ;scan=1 KP
+
