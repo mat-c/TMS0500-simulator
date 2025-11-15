@@ -28,7 +28,7 @@
 unsigned log_flags = 0;
 FILE *log_file;
 
-#define CHIPS_NUM_MAX 30
+#define CHIPS_NUM_MAX 55
 struct chip chipss[CHIPS_NUM_MAX] = {
     {.process = NULL},
 };
@@ -85,12 +85,14 @@ static void help(void)
     printf("-r file: add rom file\n");
     printf("-s file: add scom const file\n");
     printf("-k model: cal model\n");
-    printf("-R: add a ram module (can be repeated\n");
-    printf("-m: add a ti58c ram module (can be repeated\n");
+    printf("-R: add a ram module (can be repeated)\n");
+    printf("-m: add a ti58c ram module (can be repeated)\n");
     printf("-p: add printer\n");
     printf("-l file: add library file (ti5x)\n");
+    printf("-c file: card reader magnetic file\n");
     printf("-d: disassemble rom on stderr and exit\n");
     printf("-D: disassemble crom on stderr and exit\n");
+    printf("-v: verbose log in log.txt\n");
 }
 
 int main(int argc, char *argv[])
