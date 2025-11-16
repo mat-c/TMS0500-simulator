@@ -7,6 +7,9 @@ This is based of previous work from Hynek Sladký :
 - http://hsl.wz.cz/ti\_59.htm
 - https://www.hrastprogrammer.com/emulators.htm
 
+It have been tested on rom of
+SR50, SR51, SR52, SR56, SR60 (partial support), ti58, ti59, ti58c
+
 The goal is to able to run microcode of several calculator and understand
 how the differents chips work together.
 
@@ -46,6 +49,13 @@ you can pass option "-p" to enable printer
 ```
 ./bin/ti59.sh -p
 ```
+
+### card reader
+you can pass option "-c" to enable card reader
+```
+./bin/ti59.sh -c my_card_file
+```
+
 
 ### CROM
 you can pass option "-l" to load master lib
