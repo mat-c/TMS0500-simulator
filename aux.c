@@ -33,7 +33,7 @@ static int display_process(void *priv, struct bus *bus)
     if (bus->sstate == 15 && !bus->write) {
         if (bus->irg == 0x0AE8) {
                 int data = (bus->ext >> 3) & 0xFF;
-                LOG("AUX.cmd=%d ", data);
+                LOG("AUX.cmd=%x ", data);
                 /* can set busy */
         }
         else if (bus->irg == 0x0AD8) {
