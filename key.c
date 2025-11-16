@@ -557,9 +557,6 @@ int key_init(struct chip *chip, const char *name, enum hw hw_opt)
 
     if (!strcmp(name, "ti58c")) {
         cpu.key_unpress_mask = 0x24;
-        /* if unset, enable card reader code
-         */
-        cpu.key[7] |= (1 << KR_BIT);
         cpu.keymap = key_table_ti58;
         printf(key_help_ti58);
         /* printer detection */

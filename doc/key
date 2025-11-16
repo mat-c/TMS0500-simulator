@@ -1,0 +1,318 @@
+KEY instruction
+
+scan from curent Dstate up to D15
+if a key is detected (only one for a D state) :
+* clear cond
+* release HOLD (continue to next instruction=
+
+KR[7:4] = Dstate (D0-D15)
+KR[13:8] = Kline (KN KO KP KQ KS KT) KR is reserved for busy signal
+
+
+Most model to key scan on D13-D15
+If there is a printer, printer presence will force a D0/KP and all scan will return on D0 with
+cond clear (and D15 not tested).
+That's why on this model an extra check is done on KR[7:4] == D0.
+
+constant key
+
+KS D14 (rad)
+KP D0 (print)
+KP D15 (print)
+KR D10 (card)
+KR D7 (ti58)
+
+periph key D12
+
+
+SR50
+
+wait key no press
+00D2 KEY scan D13-D15
+00D3 BRA0    00D0 ; branch if key (retry)
+
+detect key press
+00E0 KEY scan D13-D15
+00DE BRA1    00D4 ; branch if no key (retry)
+00E0 KEY scan D13
+00E1 BRA1    00D4 ; branch if no key (retry)
+
+switch :
+KS D14 (RAD)
+
+
+SR50r1 / SR50A
+
+wait key no press
+00E0 KEY scan D13-D15
+00E1   BRA0    00DE ; branch if key (retry)
+00E3 KEY scan D13-D15
+00E4   BRA0    00DE ; branch if key (retry)
+
+detect key press
+00EE KEY scan D13-D15
+00EF:   BRA1    00E5 ; branch if no key (retry)
+00F1 KEY scan D13-D15
+00F2:   BRA1    00E5 ; branch if no key (retry)
+
+switch :
+KS D14 (RAD)
+
+SR51
+
+2 unpress without D0
+1 press without D0
+
+
+KR[7..4] contain key digit
+
+03EA:	KEY	20	;scan=1 KN KO KP KQ KS KT D13-D15
+03EB:	BRA1	03F1; branch if no key (continue)
+03EC:   TST     KR[4]
+03ED:   TST     KR[5]
+03EE:   TST     KR[6]
+03EF:   TST     KR[7]
+03F0:   BRA0    03E6 ;branch if KR[7:4] != D0 (retry)
+
+03F2:	KEY	20	;scan=1 KN KO KP KQ KS KT D13-D15
+03F3:	BRA1	03F9; branch if no key (continue)
+03F4:   TST     KR[4]
+03F5:   TST     KR[5]
+03F6:   TST     KR[6]
+03F7:   TST     KR[7]
+03F8:   BRA0    03E6 ; branch if KR[7:4] != D0 (retry)
+
+0408:	KEY	20	;scan=1 KN KO KP KQ KS KT
+0409:	BRA1	03F9 ; branch if no key press (retry)
+040A:   TST     KR[4]
+040B:   TST     KR[5]
+040C:   TST     KR[6]
+040D:   TST     KR[7]
+040E:   BRA1    03F9; branch if KR[7:4] == D0 (retry)
+
+switch :
+KP D15 (print trace)
+KS D14 (rad)
+
+
+SR52
+
+2 unpress without D0
+
+1 press
+1 press without D0
+
+
+wait key no press
+026E:   WAIT    D15
+026F:   SET     IDL
+0270:	KEY	20	;scan=1 KN KO KP KQ KS KT
+0271:	BRA1	0277; branch if no key (continue)
+0272:   TST     KR[4]
+0273:   TST     KR[5]
+0274:   TST     KR[6]
+0275:   TST     KR[7]
+0276:   BRA0    026E; branch if KR[7:4] != D0 (retry)
+
+wait key no press
+WAIT	D14
+0278:	KEY	20	;scan=1 KN KO KP KQ KS KT
+0279:	BRA1	027F; branch if no key (continue)
+027a:   TST     KR[4]
+027b:   TST     KR[5]
+027c:   TST     KR[6]
+027d:   TST     KR[7]
+027e:   BRA0    026E; branch if KR[7:4] != D0 (retry)
+
+detect key press
+WAIT	D14
+028f:	KEY	20	;scan=1 KN KO KP KQ KS KT
+0290:	BRA1	0280; branch if no key (retry)
+WAIT	D14
+0292:	KEY	20	;scan=1 KN KO KP KQ KS KT
+0293:	BRA1	0280; branch if no key (retry)
+0294:   TST     KR[4]
+0295:   TST     KR[5]
+0296:   TST     KR[6]
+0297:   TST     KR[7]
+0298:   BRA1    0280; branch if KR[7:4] == D0 (retry)
+0299:   CLR     IDL
+
+
+switch :
+KP D0  PC100
+KP D15 TRC
+KS D14 RD
+special key:
+KO D9  RUN
+KO D8  HLT
+
+BUSY (KR):
+D10 (card detect)
+
+after CRD_READ
+
+SR56 : same as SR52
+
+018B:	KEY	20	;scan=1 KN KO KP KQ KS KT
+018C:	BRA1	0192 ; branch if no key (continue)
+...
+0191:   BRA0    0189 ; branch if KR[7:4] != D0 (retry)
+...
+0193:	KEY	20	;scan=1 KN KO KP KQ KS KT
+0194:	BRA1	019A ; branch if no key (continue)
+...
+0199:   BRA0    0189 ; branch if KR[7:4] != D0 (retry)
+...
+01A9:	KEY	20	;scan=1 KN KO KP KQ KS KT
+01AA:	BRA1	019A ; branch if no key (retry)
+...
+01AC:	KEY	20	;scan=1 KN KO KP KQ KS KT
+01AD:	BRA1	019A ; branch if no key (retry)
+...
+01B2:   BRA1    019A ; branch if KR[7:4] == D0 (retry)
+01B3:   CLR     IDL
+
+switch :
+KP D0 PC100
+KP D15 TRC
+KS D14 R-D
+special key:
+KO D4 R/S
+KS D5 / ???
+
+
+SR60:
+
+scan KN KO KP KQ KS KT from D14 to D15
+
+039E:   0AF0:   WAIT    D15
+039F:   0A09:   SET     IDL
+03A0:   0820:   KEY     20      ;scan=1 KN KO KP KQ KS KT
+03A1:   1013:   BRA0    0398 ; branch if key (retry)
+03A2:   0820:   KEY     20      ;scan=1 KN KO KP KQ KS KT
+03A3:   1017:   BRA0    0398 ; branch if key (retry)
+03A4:   0AF0:   WAIT    D15
+03A5:   0820:   KEY     20      ;scan=1 KN KO KP KQ KS KT
+03A6:   101D:   BRA0    0398 ; branch if key (retry)
+...
+03B2:   0AF0:   WAIT    D15
+03B3:   0820:   KEY     20      ;scan=1 KN KO KP KQ KS KT
+03B4:   181B:   BRA1    03A7 ; branch if no key (retry)
+03B5:   0AF0:   WAIT    D15
+03B6:   0820:   KEY     20      ;scan=1 KN KO KP KQ KS KT
+03B7:   1821:   BRA1    03A7 ; branch if no key (retry)
+03B8:   0AF0:   WAIT    D15 
+03B9:   0820:   KEY     20      ;scan=1 KN KO KP KQ KS KT
+03BA:   1827:   BRA1    03A7 ; branch if no key (retry)
+03BB:   0A01:   CLR     IDL
+
+
+
+
+ti58/ti59 : same as SR52
+062A: WAIT    D1
+062B: SET     IDL
+062C: WAIT    D14
+062D: KEY	20	;scan=1 KN KO KP KQ KS KT
+062E: BRA1	0634 ; branch if no key (continue)
+...
+0633: BRA0    0627 ; branch if KR[7:4] != D0 (retry)
+
+0635: KEY	20	;scan=1 KN KO KP KQ KS KT
+0636: BRA1	063C ; branch if no key (continue)
+...
+063B: BRA0    0627 ; branch if KR[7:4] != D0 (retry)
+
+0657: KEY	20	;scan=1 KN KO KP KQ KS KT
+0658: BRA1	063C ; branch if no key (retry)
+
+065A: KEY	20	;scan=1 KN KO KP KQ KS KT
+065B: BRA1	063C ; branch if no key (retry)
+...
+0660: BRA1    063C ; branch if KR[7:4] == D0 (retry)
+0661: CLR     IDL
+
+
+switch :
+KP-0 PC100
+KP-15 TRC
+special key :
+KO-9 R/S
+KN-12 ADV
+KQ-9 .
+KO-8 RST
+KO-6 GTO
+
+BUSY (KR):
+D7 (disable card reader)
+D10 (card detect)
+
+
+
+ti58c
+
+; wait no key D14-D15 on KN KO KQ KS KT
+062D: WAIT    D15
+062E: KEY	24	;scan=1 KN KO KQ KS KT
+062F: 1011	BRA0	0627 ; (retry)
+
+; wait no key KP D12 (PRT)
+0630: WAIT    D13
+0631: KEY     FB      ;scan=0 KP
+0632: BRA0    0627 ; retry if key
+
+; wait no key KP D9-D4
+0633: 0AA0      WAIT    D10
+0634: 08F3      KEY     F3      ;scan=1 KP D9-D0 D15
+0635: 180A      BRA1    063A ; continue if no key
+0636: 0A75      TST     KR[7]
+0637: 1821      BRA1    0627 ; retry if KR[7] == 0 (D7-D0)
+0638: 0A65      TST     KR[6]
+0639: 1825      BRA1    0627 ; retry if KR[6] == 0 (D8-D9)
+
+; detect key
+0650: 0AD0      WAIT    D13
+0651: 0820      KEY     20      ;scan=1 KN KO KP KQ KS KT
+0652: 182B      BRA1    063D ; retry if no key
+0653: 0AD0      WAIT    D13
+0654: 0820      KEY     20      ;scan=1 KN KO KP KQ KS KT
+0655: 1831      BRA1    063D ; retry if no key
+0656: 0A75      TST     KR[7]
+0657: 1806      BRA1    065A ; if KR[7] == 0 detect key (D7-D0)
+0658: 0A55      TST     KR[5]
+0659: 1798      BRA0    0A25 ; if KR[5] == 1 extra check (D10, D11, D14, D15)
+065A: 0A01      CLR     IDL
+
+/* 1x1x : D10, D11, [D14, D15] */
+0A25: 0A65      TST     KR[6]
+0A26: 17D3      BRA0    063D ; if KR[6] == 1 retry detect key (D14 D15)
+...
+/* 101x : D10, D11 */
+0A2C: 0AA0      WAIT    D10
+0A2D: 0820	KEY	20	;scan=1 KN KO KP KQ KS KT
+0A2E: 1FE3	BRA1	063D; if no key retry
+0A2F: 0AB0      WAIT    D11
+0A30: 1FB9      BRA1    0654; rescan starting D9 ...
+
+
+switch :
+KP-10 (PC100 detect)
+KP-15 TRC
+
+special key
+KP-12 (PRT)
+KN-15 (??? print in loop)
+
+KN-12 ADV
+KQ-9 .
+KO-9 R/S
+KO-8 RST
+KO-6 GTO
+
+BUSY 10
+
+BUSY (KR):
+D10 (???)
+
+
