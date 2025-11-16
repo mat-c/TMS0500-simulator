@@ -23,7 +23,55 @@ ext[S1]: COND / set by TMC0501 but can also be set by other chips (card reader)
 ext[S2]: HOLD / set by TMC0501 but can also be set by other chips (card reader)
 ext[S3..S15]: data from/to TMC0501
 
+=== data communication over ext ===
+
+ext in/out come to/from the KR register.
+
+- bus is input with instruction "0A0C    MOV     KR,EXT[4..15]"
+  KR[4..15] <- EXT[3..14]; KR[0] <- EXT[15]
+
+- bus is ouput by default
+  EXT[3..14] <- KR[4..15]; EXT[15] <- KR[0]
+
+On KR register, you can set/clear/test bit [0-15].
+KR[2]/KR[3] is never used in rom code.
+KR[1] is only used with set (for PREG).
+
+KR[0] is used for rom jmp with PREG for addressing more
+than 4 kword rom. It is present on SR51/SR60/ti5x rom.
+
+
+Low part of KR bus can be transfered from/to alu :
+- 0A08    MOV     R5,KR[4..7]
+- 0A18    MOV     KR[4..7],R5
+
+If you want to transfert upper part of KR from/to alu (and memory), you need to do manual shift.
+That is what is done in card reader part (that do 8 bits transferts on bus) :
+
+#manual KR shift : MOV KR[4..7], KR[8..11]
+176E:	0A07:	MOV	R5,#0
+176F:	0A18:	MOV	KR[4..7],R5 ; clear KR[4..7]
+1770:	0A85:	TST	KR[8] ; move KR[8] to KR[4]
+1771:	1804:	BRA1	1773
+1772:	0045:	SET	KR[4]
+1773:	0A95:	TST	KR[9] ; move KR[9] to KR[5]
+1774:	1804:	BRA1	1776
+1775:	0055:	SET	KR[5]
+1776:	0AA5:	TST	KR[10] ; move KR[10] to KR[6]
+1777:	1804:	BRA1	1779
+1778:	0065:	SET	KR[6]
+1779:	0AB5:	TST	KR[11] ; move KR[11] to KR[7]
+177A:	1804:	BRA1	177C
+177B:	0075:	SET	KR[7]
+177E:	0A08:	MOV	R5,KR[4..7]
+
+later for crom module, they will use only 4 bits transfert
+
+
 == software details ==
 struct bus represent the connection between each chips
 
 for efficiency instead of doing transfert bit per bit, it is possible to output/input up to 16bits.
+
+the simulation is not timing accurate. We go as fast as we can and only keyboard instruction can
+block if there is nothing to do.
